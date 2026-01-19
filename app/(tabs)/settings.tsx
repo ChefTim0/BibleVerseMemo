@@ -465,12 +465,6 @@ const styles = StyleSheet.create({
     fontWeight: "600" as const,
     color: "#991B1B",
   },
-  donateInfo: {
-    fontSize: 14,
-    marginTop: 12,
-    lineHeight: 20,
-    textAlign: "center" as const,
-  },
   footerText: {
     fontSize: 14,
     marginTop: 16,
