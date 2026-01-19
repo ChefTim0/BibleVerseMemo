@@ -1,170 +1,147 @@
 # Privacy Policy
 
-**Last Updated:** January 19, 2026
+**Effective Date:** January 19, 2026  
+**App Name:** Bible Verse Memo  
+**Developer:** Timothée M.
 
-## Introduction
+## Overview
 
-This Bible Memory App ("we," "our," or "the app") is committed to protecting your privacy. This Privacy Policy explains how we handle information when you use our mobile application.
+Bible Verse Memo ("we," "our," "the app") is committed to protecting your privacy. This privacy policy explains our data practices for our mobile application available on Google Play Store and Apple App Store.
 
-## Our Privacy Commitment
+## Data Collection and Storage
 
-**We do not collect, store, or transmit any personal data.**
+### No Personal Data Collection
 
-This app is designed with privacy as a core principle. All data remains on your device, and we have no servers or databases collecting information about you or your usage.
+**We do not collect, store, or transmit any personal information.** The app does not require user accounts, email addresses, phone numbers, or any form of personal identification.
 
-## What Information We Access
+### Local Data Storage
 
-### Internet Access
-The app requires internet access **only** for:
-- **One-time Bible content download**: When you first use the app, it downloads Bible book content from a public GitHub repository for offline use.
-- **Optional features**: Accessing external links you choose to visit (such as book sources or donation links).
+All data is stored **locally on your device only** using the device's internal storage. This includes:
 
-After the initial download, the app functions **completely offline**. No data is sent from your device to any server.
+- **Bible Content**: Downloaded text files from public repositories (GitHub: ChefTim0/bible4u)
+- **Learning Progress**: Your verse memorization statistics, completion status, and practice history
+- **App Settings**: Theme preferences, language selection, learning mode, dyslexia settings, and display preferences
+- **Memorized Verses List**: Verses you mark as memorized
 
-### Local Storage
-The following information is stored **locally on your device only**:
-- **Bible content**: Downloaded text files of Bible books in your selected language
-- **Learning progress**: Your verse memorization progress, including:
-  - Verses started and completed
-  - Accuracy statistics
-  - Attempts and correct answers
-  - Memorized verses list
-- **App settings**: Your preferences including:
-  - Selected Bible language/version
-  - Learning mode preferences
-  - Theme selection (light/dark)
-  - Dyslexia mode settings
-  - Line-by-line learning preferences
+This data:
+- Never leaves your device
+- Is not shared with any third parties
+- Is not used for analytics or tracking
+- Is only accessible by this app
 
-## Data Storage Location
+### Data Backup
 
-All data is stored in your device's private app storage using:
-- **Android**: App-private storage directory
-- **iOS**: App Documents/Application Support directory (included in iCloud backup)
+- **iOS**: Automatically included in iCloud backup (if enabled by user)
+- **Android**: Manual export/import via device file system
 
-This data is:
-- Never transmitted to external servers
-- Never shared with third parties
-- Never used for analytics or tracking
-- Accessible only by this app on your device
+## Internet Access
 
-## Data Backup and Export
+The app requires internet connection **only** for:
 
-### iOS
-Your progression data is automatically included in your device's iCloud backup (if enabled). This is handled by iOS, not by our app.
+1. **Initial Bible content download**: One-time download of Bible books in your selected language/version from public GitHub repositories
+2. **Optional external links**: Donation page or project links (when you choose to open them)
 
-### Android
-You can manually:
-- **Export** your progression to a JSON file using the system file picker
-- **Import** a previously exported progression file
-
-These files remain under your control and are not sent to us or any third party.
-
-## No Third-Party Services
-
-This app does **not** use:
-- Analytics services
-- Crash reporting tools
-- Advertising networks
-- Social media integrations
-- Cloud storage services (except iOS iCloud backup, which is system-level)
-- User tracking of any kind
-
-## No Account Required
-
-This app does not require:
-- User registration
-- Login credentials
-- Email addresses
-- Phone numbers
-- Any form of personal identification
+After initial content download, the app **functions completely offline**. No data is transmitted to external servers during normal use.
 
 ## Permissions
 
-The app requests the following permissions:
+### Android Permissions
 
-### Internet Permission (Android: INTERNET)
-**Purpose**: Download Bible content for offline use
-**When used**: Only when you initiate a book download
-**Data transmitted**: HTTP request to public GitHub repository to download Bible text files
-**After download**: No internet communication occurs
+- **INTERNET**: Download Bible content from public repositories
+- **READ_EXTERNAL_STORAGE / WRITE_EXTERNAL_STORAGE**: Optional export/import of progress data
+- **RECEIVE_BOOT_COMPLETED**: Schedule local practice reminders
+- **SCHEDULE_EXACT_ALARM**: Deliver timely local notifications
+- **VIBRATE**: Haptic feedback for user interactions
 
-### Storage Permission (Android)
-**Purpose**: Export/import progression data
-**When used**: Only when you explicitly choose to export or import your data
-**Your control**: Completely optional feature; app works without it
+### iOS Permissions
+
+- **iCloud Storage**: Optional automatic backup via iOS system (user-controlled)
+- **Local Notifications**: Practice reminders (scheduled locally on device)
+
+All permissions are used exclusively for app functionality and never for data collection or tracking.
+
+## Third-Party Services
+
+This app **does not use**:
+- Analytics services (Google Analytics, Firebase Analytics, etc.)
+- Crash reporting tools
+- Advertising networks
+- Social media integrations
+- Cloud databases or external data storage
+- User tracking or profiling services
+
+## Local Notifications
+
+The app may send local notifications as practice reminders. These notifications:
+- Are generated locally on your device
+- Do not involve external servers
+- Can be disabled in app settings
+- Do not collect or transmit any data
 
 ## Children's Privacy
 
-This app does not knowingly collect any information from anyone, including children under 13. The app is safe for all ages as no data is collected.
-
-## Changes to Content Sources
-
-Bible content is downloaded from:
-- **Source**: Public GitHub repository (https://github.com/ChefTim0/bible4u)
-- **Format**: Plain text files
-- **Content**: Public domain Bible translations
-
-We do not control or own these sources. By using this app, you access content from these public repositories.
+This app does not collect any data from anyone, including children under 13 years of age. The app is safe for all ages.
 
 ## Data Security
 
-Since all data remains on your device:
+Since all data remains exclusively on your device:
 - Your device's security measures protect your data
 - Standard device encryption (if enabled) applies to app data
-- No data transmission means no network security risks
+- No network transmission eliminates data breach risks
 - No passwords or credentials are stored
 
-## Your Rights and Control
+## Your Rights and Data Control
 
 You have complete control over your data:
-- **Delete all data**: Uninstall the app to remove all app data
-- **Export data**: (Android only) Export your progression anytime
-- **Reset progress**: Use in-app features to reset your learning progress
-- **Change settings**: Modify or disable any app features anytime
 
-## F-Droid Compliance
+- **View Data**: All data is accessible within the app
+- **Export Data** (Android): Export your progress to JSON file
+- **Delete Data**: Uninstall the app to remove all local data
+- **Reset Progress**: Use in-app features to reset learning statistics
 
-This app is designed to comply with F-Droid guidelines:
-- No proprietary dependencies
-- No tracking or analytics
-- No advertising
-- Complete source code transparency
-- Minimal permissions
+## Data Sharing
 
-## Contact
-
-This app is developed and maintained by Timothée M.
-
-For questions or concerns about privacy:
-- Visit: https://timprojects.online
-- Source code: Available on request
+**We do not share any data** because we do not collect any data. All information remains on your device.
 
 ## Changes to This Policy
 
-We may update this Privacy Policy to reflect:
-- Changes in data handling practices
-- Legal or regulatory requirements
+We may update this privacy policy to reflect:
+- App feature changes
+- Legal requirements
 - User feedback
 
-Updated policies will be published with the app. Continued use constitutes acceptance of the updated policy.
+Updated policies will be included with app updates. Continued use after updates constitutes acceptance.
 
-## Compliance
+## Contact Information
 
-This Privacy Policy complies with:
-- Google Play Store requirements
-- F-Droid inclusion guidelines
-- General Data Protection Regulation (GDPR) principles
-- California Consumer Privacy Act (CCPA) principles
+**Developer:** Timothée M.  
+**Website:** https://timprojects.online/donate  
+**Support:** For privacy questions or concerns, visit our website
 
-## Summary
+## Legal Compliance
 
-**What we collect**: Nothing. All data stays on your device.
+This privacy policy complies with:
+- Google Play Store Developer Policy
+- Apple App Store Guidelines
+- General Data Protection Regulation (GDPR)
+- California Consumer Privacy Act (CCPA)
+- Children's Online Privacy Protection Act (COPPA)
 
-**What we share**: Nothing. We have no servers or databases.
+## Open Source
 
-**What you control**: Everything. Your data, your device, your choice.
+This app is built with transparency in mind. Source code may be available upon request.
 
 ---
 
-By using this app, you acknowledge that you have read and understood this Privacy Policy.
+## Summary
+
+**What we collect:** Nothing  
+**What we share:** Nothing  
+**Where data is stored:** Only on your device  
+**Your control:** Complete
+
+By using Bible Verse Memo, you acknowledge that you have read and understood this Privacy Policy.
+
+---
+
+*Last Updated: January 19, 2026*
