@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Linking, Switch, Alert, Platform } from "react-native";
 import Slider from '@react-native-community/slider';
 import { Picker } from '@react-native-picker/picker';
-import { Check, Heart, BookOpen, Sun, Moon, Brain, Download, Upload, RefreshCcw, Palette, Zap } from "lucide-react-native";
+import { Check, Heart, BookOpen, Sun, Moon, Brain, Download, Upload, RefreshCcw, Palette, Zap, Folder } from "lucide-react-native";
 import { useApp } from "../../contexts/AppContext";
 import { t } from "../../constants/translations";
 import { getColors } from "../../constants/colors";
@@ -66,13 +66,25 @@ export default function SettingsScreen() {
 
   const handleDonate = async () => {
     try {
-      const url = 'https://timprojects.online';
+      const url = 'https://timprojects.online/donate';
       const canOpen = await Linking.canOpenURL(url);
       if (canOpen) {
         await Linking.openURL(url);
       }
     } catch (error) {
       console.error('Error opening donation link:', error);
+    }
+  };
+
+  const handleMyProjects = async () => {
+    try {
+      const url = 'https://timprojects.online';
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      }
+    } catch (error) {
+      console.error('Error opening my projects link:', error);
     }
   };
 
@@ -141,10 +153,10 @@ export default function SettingsScreen() {
           text: t(uiLanguage, 'reset'),
           style: 'destructive',
           onPress: async () => {
-            await setDyslexiaSettings({ enabled: false, fontSize: 18, lineHeight: 32 });
+            await setDyslexiaSettings({ enabled: false, fontSize: 18, lineHeight: 32, wordSpacing: 0, validationTolerance: 0.8 });
             await setLineByLineSettings({ enabled: false, wordsPerLine: 5 });
-            await setAppearanceSettings({ fontSize: 16, lineHeight: 24, wordSpacing: 0, borderRadius: 12, cardOpacity: 1, animationsEnabled: true });
-            await setLearningSettings({ autoAdvance: false, showHints: true, maxHints: 10, validationTolerance: 0.8, autoMarkMemorized: false, autoMarkThreshold: 5, hapticFeedback: true, soundEffects: false });
+            await setAppearanceSettings({ fontSize: 16, animationsEnabled: true });
+            await setLearningSettings({ autoAdvance: false, showHints: true, maxHints: 10, autoMarkMemorized: false, autoMarkThreshold: 5, hapticFeedback: true });
             Alert.alert(t(uiLanguage, 'success'), t(uiLanguage, 'settingsReset'));
           },
         },
@@ -235,6 +247,26 @@ export default function SettingsScreen() {
         )}
 
         <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t(uiLanguage, 'learningMode')}</Text>
+          
+          <TouchableOpacity
+            style={[styles.option, { backgroundColor: colors.cardBackground }]}
+            onPress={() => handleModeChange('guess-verse')}
+          >
+            <Text style={[styles.optionText, { color: colors.text }]}>{t(uiLanguage, 'guessVerse')}</Text>
+            {learningMode === 'guess-verse' && <Check color={colors.primary} size={24} />}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.option, { backgroundColor: colors.cardBackground }]}
+            onPress={() => handleModeChange('guess-reference')}
+          >
+            <Text style={[styles.optionText, { color: colors.text }]}>{t(uiLanguage, 'guessReference')}</Text>
+            {learningMode === 'guess-reference' && <Check color={colors.primary} size={24} />}
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>{t(uiLanguage, 'verseLanguage')}</Text>
           
           <View style={[styles.pickerContainer, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
@@ -301,47 +333,77 @@ export default function SettingsScreen() {
             />
           </View>
 
-          {dyslexiaSettings.enabled && (
-            <>
-              <View style={[styles.sliderContainer, { backgroundColor: colors.cardBackground }]}>
-                <Text style={[styles.sliderLabel, { color: colors.text }]}>
-                  {t(uiLanguage, 'fontSize')}: {dyslexiaSettings.fontSize}px
-                </Text>
-                <Slider
-                  style={styles.slider}
-                  minimumValue={14}
-                  maximumValue={28}
-                  step={1}
-                  value={dyslexiaSettings.fontSize}
-                  onValueChange={(value: number) => setDyslexiaSettings({ fontSize: value })}
-                  minimumTrackTintColor={colors.primary}
-                  maximumTrackTintColor={colors.border}
-                  thumbTintColor={colors.primary}
-                />
-              </View>
+          <View style={[styles.sliderContainer, { backgroundColor: colors.cardBackground }]}>
+            <Text style={[styles.sliderLabel, { color: colors.text }]}>
+              {t(uiLanguage, 'fontSize')}: {dyslexiaSettings.fontSize}px
+            </Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={14}
+              maximumValue={28}
+              step={1}
+              value={dyslexiaSettings.fontSize}
+              onValueChange={(value: number) => setDyslexiaSettings({ fontSize: value })}
+              minimumTrackTintColor={colors.primary}
+              maximumTrackTintColor={colors.border}
+              thumbTintColor={colors.primary}
+            />
+          </View>
 
-              <View style={[styles.sliderContainer, { backgroundColor: colors.cardBackground }]}>
-                <Text style={[styles.sliderLabel, { color: colors.text }]}>
-                  {t(uiLanguage, 'lineSpacing')}: {dyslexiaSettings.lineHeight}px
-                </Text>
-                <Slider
-                  style={styles.slider}
-                  minimumValue={20}
-                  maximumValue={48}
-                  step={2}
-                  value={dyslexiaSettings.lineHeight}
-                  onValueChange={(value: number) => setDyslexiaSettings({ lineHeight: value })}
-                  minimumTrackTintColor={colors.primary}
-                  maximumTrackTintColor={colors.border}
-                  thumbTintColor={colors.primary}
-                />
-              </View>
+          <View style={[styles.sliderContainer, { backgroundColor: colors.cardBackground }]}>
+            <Text style={[styles.sliderLabel, { color: colors.text }]}>
+              {t(uiLanguage, 'lineSpacing')}: {dyslexiaSettings.lineHeight}px
+            </Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={20}
+              maximumValue={48}
+              step={2}
+              value={dyslexiaSettings.lineHeight}
+              onValueChange={(value: number) => setDyslexiaSettings({ lineHeight: value })}
+              minimumTrackTintColor={colors.primary}
+              maximumTrackTintColor={colors.border}
+              thumbTintColor={colors.primary}
+            />
+          </View>
 
-              <Text style={[styles.dyslexiaInfo, { color: colors.textSecondary }]}>
-                {t(uiLanguage, 'dyslexiaInfo')}
-              </Text>
-            </>
-          )}
+          <View style={[styles.sliderContainer, { backgroundColor: colors.cardBackground }]}>
+            <Text style={[styles.sliderLabel, { color: colors.text }]}>
+              {t(uiLanguage, 'wordSpacing')}: {dyslexiaSettings.wordSpacing}px
+            </Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={0}
+              maximumValue={10}
+              step={1}
+              value={dyslexiaSettings.wordSpacing}
+              onValueChange={(value: number) => setDyslexiaSettings({ wordSpacing: value })}
+              minimumTrackTintColor={colors.primary}
+              maximumTrackTintColor={colors.border}
+              thumbTintColor={colors.primary}
+            />
+          </View>
+
+          <View style={[styles.sliderContainer, { backgroundColor: colors.cardBackground }]}>
+            <Text style={[styles.sliderLabel, { color: colors.text }]}>
+              {t(uiLanguage, 'validationTolerance')}: {Math.round(dyslexiaSettings.validationTolerance * 100)}%
+            </Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={0.5}
+              maximumValue={1}
+              step={0.05}
+              value={dyslexiaSettings.validationTolerance}
+              onValueChange={(value: number) => setDyslexiaSettings({ validationTolerance: value })}
+              minimumTrackTintColor={colors.primary}
+              maximumTrackTintColor={colors.border}
+              thumbTintColor={colors.primary}
+            />
+          </View>
+
+          <Text style={[styles.dyslexiaInfo, { color: colors.textSecondary }]}>
+            {t(uiLanguage, 'dyslexiaInfo')}
+          </Text>
         </View>
 
         <View style={styles.section}>
@@ -408,74 +470,6 @@ export default function SettingsScreen() {
             />
           </View>
 
-          <View style={[styles.sliderContainer, { backgroundColor: colors.cardBackground }]}>
-            <Text style={[styles.sliderLabel, { color: colors.text }]}>
-              {t(uiLanguage, 'lineSpacing')}: {appearanceSettings.lineHeight}px
-            </Text>
-            <Slider
-              style={styles.slider}
-              minimumValue={16}
-              maximumValue={40}
-              step={2}
-              value={appearanceSettings.lineHeight}
-              onValueChange={(value: number) => setAppearanceSettings({ lineHeight: value })}
-              minimumTrackTintColor={colors.primary}
-              maximumTrackTintColor={colors.border}
-              thumbTintColor={colors.primary}
-            />
-          </View>
-
-          <View style={[styles.sliderContainer, { backgroundColor: colors.cardBackground }]}>
-            <Text style={[styles.sliderLabel, { color: colors.text }]}>
-              {t(uiLanguage, 'wordSpacing')}: {appearanceSettings.wordSpacing}px
-            </Text>
-            <Slider
-              style={styles.slider}
-              minimumValue={0}
-              maximumValue={10}
-              step={1}
-              value={appearanceSettings.wordSpacing}
-              onValueChange={(value: number) => setAppearanceSettings({ wordSpacing: value })}
-              minimumTrackTintColor={colors.primary}
-              maximumTrackTintColor={colors.border}
-              thumbTintColor={colors.primary}
-            />
-          </View>
-
-          <View style={[styles.sliderContainer, { backgroundColor: colors.cardBackground }]}>
-            <Text style={[styles.sliderLabel, { color: colors.text }]}>
-              {t(uiLanguage, 'cornerRadius')}: {appearanceSettings.borderRadius}px
-            </Text>
-            <Slider
-              style={styles.slider}
-              minimumValue={0}
-              maximumValue={24}
-              step={2}
-              value={appearanceSettings.borderRadius}
-              onValueChange={(value: number) => setAppearanceSettings({ borderRadius: value })}
-              minimumTrackTintColor={colors.primary}
-              maximumTrackTintColor={colors.border}
-              thumbTintColor={colors.primary}
-            />
-          </View>
-
-          <View style={[styles.sliderContainer, { backgroundColor: colors.cardBackground }]}>
-            <Text style={[styles.sliderLabel, { color: colors.text }]}>
-              {t(uiLanguage, 'cardTransparency')}: {Math.round(appearanceSettings.cardOpacity * 100)}%
-            </Text>
-            <Slider
-              style={styles.slider}
-              minimumValue={0.5}
-              maximumValue={1}
-              step={0.05}
-              value={appearanceSettings.cardOpacity}
-              onValueChange={(value: number) => setAppearanceSettings({ cardOpacity: value })}
-              minimumTrackTintColor={colors.primary}
-              maximumTrackTintColor={colors.border}
-              thumbTintColor={colors.primary}
-            />
-          </View>
-
           <View style={[styles.option, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.themeOption}>
               <Text style={[styles.optionText, { color: colors.text }]}>{t(uiLanguage, 'enableAnimations')}</Text>
@@ -526,7 +520,7 @@ export default function SettingsScreen() {
               <Slider
                 style={styles.slider}
                 minimumValue={1}
-                maximumValue={20}
+                maximumValue={50}
                 step={1}
                 value={learningSettings.maxHints}
                 onValueChange={(value: number) => setLearningSettings({ maxHints: value })}
@@ -536,23 +530,6 @@ export default function SettingsScreen() {
               />
             </View>
           )}
-
-          <View style={[styles.sliderContainer, { backgroundColor: colors.cardBackground }]}>
-            <Text style={[styles.sliderLabel, { color: colors.text }]}>
-              {t(uiLanguage, 'validationTolerance')}: {Math.round(learningSettings.validationTolerance * 100)}%
-            </Text>
-            <Slider
-              style={styles.slider}
-              minimumValue={0.5}
-              maximumValue={1}
-              step={0.05}
-              value={learningSettings.validationTolerance}
-              onValueChange={(value: number) => setLearningSettings({ validationTolerance: value })}
-              minimumTrackTintColor={colors.primary}
-              maximumTrackTintColor={colors.border}
-              thumbTintColor={colors.primary}
-            />
-          </View>
 
           <View style={[styles.option, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.themeOption}>
@@ -599,38 +576,6 @@ export default function SettingsScreen() {
               thumbColor={learningSettings.hapticFeedback ? colors.primary : colors.textTertiary}
             />
           </View>
-
-          <View style={[styles.option, { backgroundColor: colors.cardBackground }]}>
-            <View style={styles.themeOption}>
-              <Text style={[styles.optionText, { color: colors.text }]}>{t(uiLanguage, 'enableSounds')}</Text>
-            </View>
-            <Switch
-              value={learningSettings.soundEffects}
-              onValueChange={(value) => setLearningSettings({ soundEffects: value })}
-              trackColor={{ false: colors.border, true: colors.primary + '80' }}
-              thumbColor={learningSettings.soundEffects ? colors.primary : colors.textTertiary}
-            />
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t(uiLanguage, 'learningMode')}</Text>
-          
-          <TouchableOpacity
-            style={[styles.option, { backgroundColor: colors.cardBackground }]}
-            onPress={() => handleModeChange('guess-verse')}
-          >
-            <Text style={[styles.optionText, { color: colors.text }]}>{t(uiLanguage, 'guessVerse')}</Text>
-            {learningMode === 'guess-verse' && <Check color={colors.primary} size={24} />}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.option, { backgroundColor: colors.cardBackground }]}
-            onPress={() => handleModeChange('guess-reference')}
-          >
-            <Text style={[styles.optionText, { color: colors.text }]}>{t(uiLanguage, 'guessReference')}</Text>
-            {learningMode === 'guess-reference' && <Check color={colors.primary} size={24} />}
-          </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
@@ -652,6 +597,15 @@ export default function SettingsScreen() {
           >
             <Heart color="#EF4444" size={20} fill="#EF4444" />
             <Text style={styles.donateButtonText}>{t(uiLanguage, 'donate')}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.myProjectsButton}
+            onPress={handleMyProjects}
+            activeOpacity={0.8}
+          >
+            <Folder color="#3B82F6" size={20} />
+            <Text style={styles.myProjectsButtonText}>{t(uiLanguage, 'myProjects')}</Text>
           </TouchableOpacity>
           
           <Text style={[styles.footerText, { color: colors.textTertiary, marginTop: 24 }]}>
@@ -721,10 +675,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500" as const,
   },
-  optionSubtext: {
-    fontSize: 13,
-    marginTop: 4,
-  },
   booksSourceButton: {
     backgroundColor: "#D1FAE5",
     padding: 16,
@@ -758,11 +708,31 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 1,
+    marginBottom: 12,
   },
   donateButtonText: {
     fontSize: 16,
     fontWeight: "600" as const,
     color: "#991B1B",
+  },
+  myProjectsButton: {
+    backgroundColor: "#DBEAFE",
+    padding: 16,
+    borderRadius: 12,
+    flexDirection: "row" as const,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    gap: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  myProjectsButtonText: {
+    fontSize: 16,
+    fontWeight: "600" as const,
+    color: "#1E40AF",
   },
   footerText: {
     fontSize: 14,
@@ -770,67 +740,10 @@ const styles = StyleSheet.create({
     textAlign: "center" as const,
     fontStyle: "italic" as const,
   },
-  loginButton: {
-    padding: 16,
-    borderRadius: 12,
-    flexDirection: "row" as const,
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
-    gap: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
-    marginBottom: 12,
-  },
-  loginButtonText: {
-    fontSize: 16,
-    fontWeight: "600" as const,
-    color: "#FFFFFF",
-  },
-  logoutButton: {
-    padding: 16,
-    borderRadius: 12,
-    flexDirection: "row" as const,
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
-    gap: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
-    marginTop: 8,
-  },
-  logoutText: {
-    fontSize: 16,
-    fontWeight: "600" as const,
-  },
   accountInfo: {
     fontSize: 14,
     textAlign: "center" as const,
     lineHeight: 20,
-  },
-  friendsButton: {
-    padding: 16,
-    borderRadius: 12,
-    flexDirection: "row" as const,
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
-    gap: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  friendsButtonText: {
-    fontSize: 16,
-    fontWeight: "600" as const,
-    color: "#FFFFFF",
   },
   exportButton: {
     padding: 16,
@@ -867,9 +780,6 @@ const styles = StyleSheet.create({
   importButtonText: {
     fontSize: 16,
     fontWeight: "600" as const,
-  },
-  languageFlag: {
-    fontSize: 24,
   },
   pickerContainer: {
     borderRadius: 12,

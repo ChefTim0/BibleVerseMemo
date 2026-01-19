@@ -41,6 +41,22 @@ function getUILanguage(bibleVersion: Language): string {
     'LSG': 'fr',
     'FOB': 'fr',
     'KJV': 'en',
+    'ITADIO': 'it',
+    'CEI': 'it',
+    'RVA': 'es',
+    'spavbl': 'es',
+    'ELB71': 'de',
+    'ELB': 'de',
+    'LUTH1545': 'de',
+    'deu1912': 'de',
+    'deutkw': 'de',
+    'VULGATE': 'en',
+    'TR1894': 'en',
+    'TR1550': 'en',
+    'WHNU': 'en',
+    'grm': 'en',
+    'WLC': 'en',
+    'heb': 'en',
   };
   return mapping[bibleVersion] || 'en';
 }
@@ -54,6 +70,8 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
     enabled: false,
     fontSize: 18,
     lineHeight: 32,
+    wordSpacing: 0,
+    validationTolerance: 0.8,
   });
   const [lineByLineSettings, setLineByLineSettingsState] = useState<LineByLineSettings>({
     enabled: false,
@@ -61,21 +79,15 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
   });
   const [appearanceSettings, setAppearanceSettingsState] = useState<AppearanceSettings>({
     fontSize: 16,
-    lineHeight: 24,
-    wordSpacing: 0,
-    borderRadius: 12,
-    cardOpacity: 1,
     animationsEnabled: true,
   });
   const [learningSettings, setLearningSettingsState] = useState<LearningSettings>({
     autoAdvance: false,
     showHints: true,
     maxHints: 10,
-    validationTolerance: 0.8,
     autoMarkMemorized: false,
     autoMarkThreshold: 5,
     hapticFeedback: true,
-    soundEffects: false,
   });
   const [isLoading, setIsLoading] = useState(true);
   

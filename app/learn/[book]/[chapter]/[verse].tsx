@@ -115,7 +115,7 @@ export default function LearnScreen() {
         const currentLine = verseLines[currentLineIndex];
         
         const result = checkDyslexiaFriendlyMatch(userAnswer, currentLine, {
-          toleranceLevel: learningSettings.validationTolerance,
+          toleranceLevel: dyslexiaSettings.validationTolerance,
         });
         correct = result.isMatch;
         console.log('[Line Check]', {
@@ -128,7 +128,7 @@ export default function LearnScreen() {
         const textToCheck = verseData.text;
         
         const result = checkDyslexiaFriendlyMatch(userAnswer, textToCheck, {
-          toleranceLevel: learningSettings.validationTolerance,
+          toleranceLevel: dyslexiaSettings.validationTolerance,
         });
         correct = result.isMatch;
         console.log('[Verse Check]', {
@@ -234,8 +234,8 @@ export default function LearnScreen() {
                     { 
                       color: colors.success,
                       fontSize: dyslexiaSettings.enabled ? dyslexiaSettings.fontSize : appearanceSettings.fontSize,
-                      lineHeight: dyslexiaSettings.enabled ? dyslexiaSettings.lineHeight : appearanceSettings.lineHeight,
-                      letterSpacing: appearanceSettings.wordSpacing,
+                      lineHeight: dyslexiaSettings.lineHeight,
+                      letterSpacing: dyslexiaSettings.wordSpacing,
                     },
                   ]}>
                     ✓ {line}
@@ -246,8 +246,8 @@ export default function LearnScreen() {
                     { 
                       color: colors.text,
                       fontSize: dyslexiaSettings.enabled ? dyslexiaSettings.fontSize : appearanceSettings.fontSize,
-                      lineHeight: dyslexiaSettings.enabled ? dyslexiaSettings.lineHeight : appearanceSettings.lineHeight,
-                      letterSpacing: appearanceSettings.wordSpacing,
+                      lineHeight: dyslexiaSettings.lineHeight,
+                      letterSpacing: dyslexiaSettings.wordSpacing,
                     },
                   ]}>
                     {line}
@@ -258,7 +258,7 @@ export default function LearnScreen() {
                     { 
                       color: colors.textTertiary,
                       fontSize: dyslexiaSettings.enabled ? dyslexiaSettings.fontSize : appearanceSettings.fontSize,
-                      lineHeight: dyslexiaSettings.enabled ? dyslexiaSettings.lineHeight : appearanceSettings.lineHeight,
+                      lineHeight: dyslexiaSettings.lineHeight,
                     },
                   ]}>
                     Ligne {index + 1}
@@ -283,8 +283,8 @@ export default function LearnScreen() {
               { 
                 color: colors.text,
                 fontSize: dyslexiaSettings.enabled ? dyslexiaSettings.fontSize : appearanceSettings.fontSize,
-                lineHeight: dyslexiaSettings.enabled ? dyslexiaSettings.lineHeight : appearanceSettings.lineHeight,
-                letterSpacing: appearanceSettings.wordSpacing,
+                lineHeight: dyslexiaSettings.lineHeight,
+                letterSpacing: dyslexiaSettings.wordSpacing,
               }
             ]}
           >
@@ -348,7 +348,7 @@ export default function LearnScreen() {
             {isMemorized ? t(uiLanguage, 'memorized') : t(uiLanguage, 'markAsMemorized')}
           </Text>
         </TouchableOpacity>
-        <View style={[styles.card, { backgroundColor: colors.cardBackground, opacity: appearanceSettings.cardOpacity, borderRadius: appearanceSettings.borderRadius }]}>
+        <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
           {masteryLevel > 0 && (
             <View style={[styles.masteryContainer, { borderBottomColor: colors.border }]}>
               <Text style={[styles.masteryLabel, { color: colors.textSecondary }]}>{t(uiLanguage, 'mastery')}</Text>
@@ -394,8 +394,8 @@ export default function LearnScreen() {
                 { 
                   color: colors.text,
                   fontSize: dyslexiaSettings.enabled ? dyslexiaSettings.fontSize : appearanceSettings.fontSize,
-                  lineHeight: dyslexiaSettings.enabled ? dyslexiaSettings.lineHeight : appearanceSettings.lineHeight,
-                  letterSpacing: appearanceSettings.wordSpacing,
+                  lineHeight: dyslexiaSettings.lineHeight,
+                  letterSpacing: dyslexiaSettings.wordSpacing,
                 }
               ]}>
                 {verseData.text}
@@ -404,7 +404,7 @@ export default function LearnScreen() {
           )}
         </View>
 
-        <View style={[styles.inputCard, { backgroundColor: colors.cardBackground, opacity: appearanceSettings.cardOpacity, borderRadius: appearanceSettings.borderRadius }]}>
+        <View style={[styles.inputCard, { backgroundColor: colors.cardBackground }]}>
           <Text style={[styles.inputLabel, { color: colors.text }]}>
             {learningMode === 'guess-verse' 
               ? t(uiLanguage, 'guessVerse')
