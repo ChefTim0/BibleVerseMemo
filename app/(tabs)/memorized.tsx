@@ -27,9 +27,7 @@ export default function MemorizedScreen() {
           <View style={styles.emptyState}>
             <Heart color={colors.textSecondary} size={64} strokeWidth={1.5} />
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-              {uiLanguage === 'en' 
-                ? 'No memorized verses yet. Mark verses as memorized while practicing!'
-                : 'Aucun verset mémorisé pour le moment. Marquez des versets comme mémorisés pendant la pratique !'}
+              {t(uiLanguage, 'noMemorizedVerses')}
             </Text>
           </View>
         ) : (

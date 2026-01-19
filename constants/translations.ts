@@ -119,6 +119,7 @@ export const translations: Record<Language, Record<string, string>> = {
     resetConfirm: 'Are you sure you want to reset all settings to default?',
     reset: 'Reset',
     settingsReset: 'Settings have been reset to default',
+    noMemorizedVerses: 'No memorized verses yet. Mark verses as memorized while practicing!',
   },
   fr: {
     books: 'Livres',
@@ -238,6 +239,7 @@ export const translations: Record<Language, Record<string, string>> = {
     resetConfirm: 'Êtes-vous sûr de vouloir réinitialiser tous les paramètres par défaut ?',
     reset: 'Réinitialiser',
     settingsReset: 'Les paramètres ont été réinitialisés par défaut',
+    noMemorizedVerses: 'Aucun verset mémorisé pour le moment. Marquez des versets comme mémorisés pendant la pratique !',
   },
   'fr-fob': {
     books: 'Livres',
@@ -357,6 +359,7 @@ export const translations: Record<Language, Record<string, string>> = {
     resetConfirm: 'Êtes-vous sûr de vouloir réinitialiser tous les paramètres par défaut ?',
     reset: 'Réinitialiser',
     settingsReset: 'Les paramètres ont été réinitialisés par défaut',
+    noMemorizedVerses: 'Aucun verset mémorisé pour le moment. Marquez des versets comme mémorisés pendant la pratique !',
   },
   'en-asv': {
     books: 'Books',
@@ -476,6 +479,7 @@ export const translations: Record<Language, Record<string, string>> = {
     resetConfirm: 'Are you sure you want to reset all settings to default?',
     reset: 'Reset',
     settingsReset: 'Settings have been reset to default',
+    noMemorizedVerses: 'No memorized verses yet. Mark verses as memorized while practicing!',
   },
   es: {
     books: 'Libros',
@@ -595,6 +599,7 @@ export const translations: Record<Language, Record<string, string>> = {
     resetConfirm: '¿Estás seguro de que quieres restablecer toda la configuración a los valores predeterminados?',
     reset: 'Restablecer',
     settingsReset: 'La configuración se ha restablecido a los valores predeterminados',
+    noMemorizedVerses: 'Aún no hay versículos memorizados. ¡Marca versículos como memorizados mientras practicas!',
   },
   pt: {
     books: 'Livros',
@@ -714,6 +719,7 @@ export const translations: Record<Language, Record<string, string>> = {
     resetConfirm: 'Tem certeza de que deseja redefinir todas as configurações para o padrão?',
     reset: 'Redefinir',
     settingsReset: 'As configurações foram redefinidas para o padrão',
+    noMemorizedVerses: 'Ainda não há versículos memorizados. Marque versículos como memorizados enquanto pratica!',
   },
   de: {
     books: 'Bücher',
@@ -833,6 +839,7 @@ export const translations: Record<Language, Record<string, string>> = {
     resetConfirm: 'Möchten Sie wirklich alle Einstellungen auf die Standardwerte zurücksetzen?',
     reset: 'Zurücksetzen',
     settingsReset: 'Einstellungen wurden auf die Standardwerte zurückgesetzt',
+    noMemorizedVerses: 'Noch keine auswendig gelernten Verse. Markieren Sie Verse beim Üben als auswendig gelernt!',
   },
   it: {
     books: 'Libri',
@@ -952,6 +959,7 @@ export const translations: Record<Language, Record<string, string>> = {
     resetConfirm: 'Sei sicuro di voler ripristinare tutte le impostazioni ai valori predefiniti?',
     reset: 'Ripristina',
     settingsReset: 'Le impostazioni sono state ripristinate ai valori predefiniti',
+    noMemorizedVerses: 'Nessun versetto memorizzato ancora. Segna i versetti come memorizzati mentre pratichi!',
   },
   ITADIO: {
     books: 'Libri',
