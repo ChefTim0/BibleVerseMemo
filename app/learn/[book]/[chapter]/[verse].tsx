@@ -1,7 +1,8 @@
 import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 import { useLocalSearchParams, Stack, useRouter } from "expo-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Lightbulb, Check, X, CheckCircle2 } from "lucide-react-native";
+import * as Haptics from 'expo-haptics';
 import { useApp } from "../../../../contexts/AppContext";
 import { getVerse } from "../../../../utils/database";
 import { t, getBookName } from "../../../../constants/translations";
@@ -10,7 +11,7 @@ import { checkDyslexiaFriendlyMatch } from "../../../../utils/text-validation";
 import type { Verse } from "../../../../types/database";
 
 export default function LearnScreen() {
-  const { language, uiLanguage, learningMode, theme, dyslexiaSettings, lineByLineSettings, getVerseProgress, updateProgress, toggleMemorized } = useApp();
+  const { language, uiLanguage, learningMode, theme, dyslexiaSettings, lineByLineSettings, appearanceSettings, learningSettings, getVerseProgress, updateProgress, toggleMemorized } = useApp();
   const colors = getColors(theme);
   const router = useRouter();
   const { book, chapter, verse } = useLocalSearchParams<{ book: string; chapter: string; verse: string }>();
@@ -26,6 +27,18 @@ export default function LearnScreen() {
   const [isMemorized, setIsMemorized] = useState(false);
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
   const [verseLines, setVerseLines] = useState<string[]>([]);
+
+  const splitIntoLines = useCallback((text: string): string[] => {
+    const words = text.split(' ');
+    const lines: string[] = [];
+    const wordsPerLine = lineByLineSettings.wordsPerLine;
+    
+    for (let i = 0; i < words.length; i += wordsPerLine) {
+      lines.push(words.slice(i, i + wordsPerLine).join(' '));
+    }
+    
+    return lines;
+  }, [lineByLineSettings.wordsPerLine]);
 
   useEffect(() => {
     const loadVerse = async () => {
@@ -59,39 +72,31 @@ export default function LearnScreen() {
     if (book && chapter && verse) {
       loadVerse();
     }
-  }, [book, chapter, verse, language, getVerseProgress, learningMode, lineByLineSettings.enabled]);
+  }, [book, chapter, verse, language, getVerseProgress, learningMode, lineByLineSettings.enabled, splitIntoLines]);
 
   const handleHint = () => {
-    if (learningMode === 'guess-verse' && verseData) {
+    if (learningMode === 'guess-verse' && verseData && learningSettings.showHints) {
       const words = verseData.text.split(' ');
       const unrevealedIndices = words
         .map((_, index) => index)
         .filter(index => !revealedWords.has(index));
       
-      if (unrevealedIndices.length > 0) {
+      if (unrevealedIndices.length > 0 && hintsUsed < learningSettings.maxHints) {
         const randomIndex = unrevealedIndices[Math.floor(Math.random() * unrevealedIndices.length)];
         const newRevealed = new Set(revealedWords);
         newRevealed.add(randomIndex);
         setRevealedWords(newRevealed);
         setHintsUsed(prev => prev + 1);
+        
+        if (learningSettings.hapticFeedback) {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
       }
     }
   };
 
   const normalizePunctuation = (text: string): string => {
     return text.replace(/[.,;:!?"'()\[\]{}]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
-  };
-
-  const splitIntoLines = (text: string): string[] => {
-    const words = text.split(' ');
-    const lines: string[] = [];
-    const wordsPerLine = 5;
-    
-    for (let i = 0; i < words.length; i += wordsPerLine) {
-      lines.push(words.slice(i, i + wordsPerLine).join(' '));
-    }
-    
-    return lines;
   };
 
   const handleNextLine = () => {
@@ -115,7 +120,7 @@ export default function LearnScreen() {
         
         if (dyslexiaSettings.tolerantValidation) {
           const result = checkDyslexiaFriendlyMatch(userAnswer, currentLine, {
-            toleranceLevel: 0.80,
+            toleranceLevel: learningSettings.validationTolerance,
           });
           correct = result.isMatch;
           console.log('[Dyslexia Line Check]', {
@@ -134,7 +139,7 @@ export default function LearnScreen() {
         
         if (dyslexiaSettings.enabled && dyslexiaSettings.tolerantValidation) {
           const result = checkDyslexiaFriendlyMatch(userAnswer, textToCheck, {
-            toleranceLevel: 0.80,
+            toleranceLevel: learningSettings.validationTolerance,
           });
           correct = result.isMatch;
         } else {
@@ -153,6 +158,14 @@ export default function LearnScreen() {
                 normalizedAnswer.includes(`${verseData.verse}`);
     }
 
+    if (learningSettings.hapticFeedback) {
+      if (correct) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+    }
+
     setIsCorrect(correct);
     setShowFeedback(true);
 
@@ -160,6 +173,8 @@ export default function LearnScreen() {
     const newMasteryLevel = correct && currentMasteryLevel < 5 ? currentMasteryLevel + 1 : currentMasteryLevel;
     
     setMasteryLevel(newMasteryLevel);
+
+    const shouldAutoMarkMemorized = learningSettings.autoMarkMemorized && newMasteryLevel >= learningSettings.autoMarkThreshold;
 
     const newProgress = {
       book: verseData.book,
@@ -171,10 +186,20 @@ export default function LearnScreen() {
       completed: newMasteryLevel >= 5,
       started: true,
       masteryLevel: newMasteryLevel,
-      memorized: currentProgress?.memorized || false,
+      memorized: shouldAutoMarkMemorized || currentProgress?.memorized || false,
     };
 
     await updateProgress(newProgress);
+    
+    if (shouldAutoMarkMemorized && !currentProgress?.memorized) {
+      setIsMemorized(true);
+    }
+
+    if (learningSettings.autoAdvance && correct && !lineByLineSettings.enabled) {
+      setTimeout(() => {
+        handleNext();
+      }, 1500);
+    }
   };
 
   const handleRetry = () => {
@@ -218,8 +243,9 @@ export default function LearnScreen() {
                     styles.lineText,
                     { 
                       color: colors.success,
-                      fontSize: dyslexiaSettings.fontSize,
-                      lineHeight: dyslexiaSettings.lineHeight,
+                      fontSize: dyslexiaSettings.enabled ? dyslexiaSettings.fontSize : appearanceSettings.fontSize,
+                      lineHeight: dyslexiaSettings.enabled ? dyslexiaSettings.lineHeight : appearanceSettings.lineHeight,
+                      letterSpacing: appearanceSettings.wordSpacing,
                     },
                   ]}>
                     ✓ {line}
@@ -229,8 +255,9 @@ export default function LearnScreen() {
                     styles.lineText,
                     { 
                       color: colors.text,
-                      fontSize: dyslexiaSettings.fontSize,
-                      lineHeight: dyslexiaSettings.lineHeight,
+                      fontSize: dyslexiaSettings.enabled ? dyslexiaSettings.fontSize : appearanceSettings.fontSize,
+                      lineHeight: dyslexiaSettings.enabled ? dyslexiaSettings.lineHeight : appearanceSettings.lineHeight,
+                      letterSpacing: appearanceSettings.wordSpacing,
                     },
                   ]}>
                     {line}
@@ -240,8 +267,8 @@ export default function LearnScreen() {
                     styles.lineText,
                     { 
                       color: colors.textTertiary,
-                      fontSize: dyslexiaSettings.enabled ? dyslexiaSettings.fontSize : 16,
-                      lineHeight: dyslexiaSettings.enabled ? dyslexiaSettings.lineHeight : 24,
+                      fontSize: dyslexiaSettings.enabled ? dyslexiaSettings.fontSize : appearanceSettings.fontSize,
+                      lineHeight: dyslexiaSettings.enabled ? dyslexiaSettings.lineHeight : appearanceSettings.lineHeight,
                     },
                   ]}>
                     Ligne {index + 1}
@@ -265,8 +292,9 @@ export default function LearnScreen() {
               styles.maskedText, 
               { 
                 color: colors.text,
-                fontSize: dyslexiaSettings.enabled ? dyslexiaSettings.fontSize : 16,
-                lineHeight: dyslexiaSettings.enabled ? dyslexiaSettings.lineHeight : 24,
+                fontSize: dyslexiaSettings.enabled ? dyslexiaSettings.fontSize : appearanceSettings.fontSize,
+                lineHeight: dyslexiaSettings.enabled ? dyslexiaSettings.lineHeight : appearanceSettings.lineHeight,
+                letterSpacing: appearanceSettings.wordSpacing,
               }
             ]}
           >
@@ -330,7 +358,7 @@ export default function LearnScreen() {
             {isMemorized ? t(uiLanguage, 'memorized') : t(uiLanguage, 'markAsMemorized')}
           </Text>
         </TouchableOpacity>
-        <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
+        <View style={[styles.card, { backgroundColor: colors.cardBackground, opacity: appearanceSettings.cardOpacity, borderRadius: appearanceSettings.borderRadius }]}>
           {masteryLevel > 0 && (
             <View style={[styles.masteryContainer, { borderBottomColor: colors.border }]}>
               <Text style={[styles.masteryLabel, { color: colors.textSecondary }]}>{t(uiLanguage, 'mastery')}</Text>
@@ -354,6 +382,7 @@ export default function LearnScreen() {
                 {getBookName(language, verseData.book)} {verseData.chapter}:{verseData.verse}
               </Text>
               {renderMaskedText()}
+              {learningSettings.showHints && (
               <View style={[styles.hintContainer, { borderTopColor: colors.border }]}>
                 <TouchableOpacity
                   style={styles.hintButton}
@@ -362,8 +391,11 @@ export default function LearnScreen() {
                   <Lightbulb color={colors.warning} size={20} />
                   <Text style={styles.hintButtonText}>{t(uiLanguage, 'hint')}</Text>
                 </TouchableOpacity>
-                <Text style={[styles.hintsText, { color: colors.textSecondary }]}>Hints used: {hintsUsed}</Text>
+                <Text style={[styles.hintsText, { color: colors.textSecondary }]}>
+                  {hintsUsed}/{learningSettings.maxHints}
+                </Text>
               </View>
+              )}
             </>
           ) : (
             <>
@@ -371,8 +403,9 @@ export default function LearnScreen() {
                 styles.verseText, 
                 { 
                   color: colors.text,
-                  fontSize: dyslexiaSettings.enabled ? dyslexiaSettings.fontSize : 16,
-                  lineHeight: dyslexiaSettings.enabled ? dyslexiaSettings.lineHeight : 24,
+                  fontSize: dyslexiaSettings.enabled ? dyslexiaSettings.fontSize : appearanceSettings.fontSize,
+                  lineHeight: dyslexiaSettings.enabled ? dyslexiaSettings.lineHeight : appearanceSettings.lineHeight,
+                  letterSpacing: appearanceSettings.wordSpacing,
                 }
               ]}>
                 {verseData.text}
@@ -381,7 +414,7 @@ export default function LearnScreen() {
           )}
         </View>
 
-        <View style={[styles.inputCard, { backgroundColor: colors.cardBackground }]}>
+        <View style={[styles.inputCard, { backgroundColor: colors.cardBackground, opacity: appearanceSettings.cardOpacity, borderRadius: appearanceSettings.borderRadius }]}>
           <Text style={[styles.inputLabel, { color: colors.text }]}>
             {learningMode === 'guess-verse' 
               ? t(uiLanguage, 'guessVerse')

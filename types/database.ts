@@ -41,4 +41,25 @@ export interface DyslexiaSettings {
 
 export interface LineByLineSettings {
   enabled: boolean;
+  wordsPerLine: number;
+}
+
+export interface AppearanceSettings {
+  fontSize: number;
+  lineHeight: number;
+  wordSpacing: number;
+  borderRadius: number;
+  cardOpacity: number;
+  animationsEnabled: boolean;
+}
+
+export interface LearningSettings {
+  autoAdvance: boolean;
+  showHints: boolean;
+  maxHints: number;
+  validationTolerance: number;
+  autoMarkMemorized: boolean;
+  autoMarkThreshold: number;
+  hapticFeedback: boolean;
+  soundEffects: boolean;
 }

@@ -1,7 +1,7 @@
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
-import type { Language, LearningMode, VerseProgress, Theme, DyslexiaSettings, LineByLineSettings } from '../types/database';
+import type { Language, LearningMode, VerseProgress, Theme, DyslexiaSettings, LineByLineSettings, AppearanceSettings, LearningSettings } from '../types/database';
 
 interface AppState {
   language: Language;
@@ -11,11 +11,15 @@ interface AppState {
   progress: VerseProgress[];
   dyslexiaSettings: DyslexiaSettings;
   lineByLineSettings: LineByLineSettings;
+  appearanceSettings: AppearanceSettings;
+  learningSettings: LearningSettings;
   setLanguage: (language: Language) => Promise<void>;
   setLearningMode: (mode: LearningMode) => Promise<void>;
   setTheme: (theme: Theme) => Promise<void>;
   setDyslexiaSettings: (settings: Partial<DyslexiaSettings>) => Promise<void>;
   setLineByLineSettings: (settings: Partial<LineByLineSettings>) => Promise<void>;
+  setAppearanceSettings: (settings: Partial<AppearanceSettings>) => Promise<void>;
+  setLearningSettings: (settings: Partial<LearningSettings>) => Promise<void>;
   getVerseProgress: (book: string, chapter: number, verse: number) => VerseProgress | undefined;
   updateProgress: (progress: VerseProgress) => Promise<void>;
   resetVerseProgress: (book: string, chapter: number, verse: number) => Promise<void>;
@@ -29,6 +33,8 @@ const THEME_KEY = '@theme';
 const PROGRESS_KEY = '@verse_progress';
 const DYSLEXIA_KEY = '@dyslexia_settings';
 const LINE_BY_LINE_KEY = '@line_by_line_settings';
+const APPEARANCE_KEY = '@appearance_settings';
+const LEARNING_SETTINGS_KEY = '@learning_settings';
 
 function getUILanguage(bibleVersion: Language): string {
   const mapping: Record<string, string> = {
@@ -52,6 +58,25 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
   });
   const [lineByLineSettings, setLineByLineSettingsState] = useState<LineByLineSettings>({
     enabled: false,
+    wordsPerLine: 5,
+  });
+  const [appearanceSettings, setAppearanceSettingsState] = useState<AppearanceSettings>({
+    fontSize: 16,
+    lineHeight: 24,
+    wordSpacing: 0,
+    borderRadius: 12,
+    cardOpacity: 1,
+    animationsEnabled: true,
+  });
+  const [learningSettings, setLearningSettingsState] = useState<LearningSettings>({
+    autoAdvance: false,
+    showHints: true,
+    maxHints: 10,
+    validationTolerance: 0.8,
+    autoMarkMemorized: false,
+    autoMarkThreshold: 5,
+    hapticFeedback: true,
+    soundEffects: false,
   });
   const [isLoading, setIsLoading] = useState(true);
   
@@ -65,13 +90,15 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
 
   const loadSettings = async () => {
     try {
-      const [savedLanguage, savedMode, savedTheme, savedProgress, savedDyslexia, savedLineByLine] = await Promise.all([
+      const [savedLanguage, savedMode, savedTheme, savedProgress, savedDyslexia, savedLineByLine, savedAppearance, savedLearning] = await Promise.all([
         AsyncStorage.getItem(LANGUAGE_KEY),
         AsyncStorage.getItem(LEARNING_MODE_KEY),
         AsyncStorage.getItem(THEME_KEY),
         AsyncStorage.getItem(PROGRESS_KEY),
         AsyncStorage.getItem(DYSLEXIA_KEY),
         AsyncStorage.getItem(LINE_BY_LINE_KEY),
+        AsyncStorage.getItem(APPEARANCE_KEY),
+        AsyncStorage.getItem(LEARNING_SETTINGS_KEY),
       ]);
 
       if (savedLanguage) setLanguageState(savedLanguage as Language);
@@ -80,6 +107,8 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
       if (savedProgress) setProgress(JSON.parse(savedProgress));
       if (savedDyslexia) setDyslexiaSettingsState(JSON.parse(savedDyslexia));
       if (savedLineByLine) setLineByLineSettingsState(JSON.parse(savedLineByLine));
+      if (savedAppearance) setAppearanceSettingsState(JSON.parse(savedAppearance));
+      if (savedLearning) setLearningSettingsState(JSON.parse(savedLearning));
     } catch (error) {
       console.error('Error loading settings:', error);
     } finally {
@@ -114,6 +143,18 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
     const newSettings = { ...lineByLineSettings, ...settings };
     setLineByLineSettingsState(newSettings);
     await AsyncStorage.setItem(LINE_BY_LINE_KEY, JSON.stringify(newSettings));
+  };
+
+  const setAppearanceSettings = async (settings: Partial<AppearanceSettings>) => {
+    const newSettings = { ...appearanceSettings, ...settings };
+    setAppearanceSettingsState(newSettings);
+    await AsyncStorage.setItem(APPEARANCE_KEY, JSON.stringify(newSettings));
+  };
+
+  const setLearningSettings = async (settings: Partial<LearningSettings>) => {
+    const newSettings = { ...learningSettings, ...settings };
+    setLearningSettingsState(newSettings);
+    await AsyncStorage.setItem(LEARNING_SETTINGS_KEY, JSON.stringify(newSettings));
   };
 
   const getVerseProgress = (book: string, chapter: number, verse: number) => {
@@ -180,11 +221,15 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
     progress,
     dyslexiaSettings,
     lineByLineSettings,
+    appearanceSettings,
+    learningSettings,
     setLanguage,
     setLearningMode,
     setTheme,
     setDyslexiaSettings,
     setLineByLineSettings,
+    setAppearanceSettings,
+    setLearningSettings,
     getVerseProgress,
     updateProgress,
     resetVerseProgress,
