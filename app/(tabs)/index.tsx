@@ -6,6 +6,8 @@ import { useApp } from "../../contexts/AppContext";
 import { getBooks, getRandomVerse, getBookName } from "../../utils/database";
 import { t } from "../../constants/translations";
 import { getColors } from "../../constants/colors";
+import { BookDownloadModal } from "../../components/BookDownloadModal";
+import { isBookDownloaded } from "../../services/BookDownloadService";
 
 
 
@@ -17,12 +19,21 @@ export default function BooksScreen() {
   const [bookNames, setBookNames] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
 
 
   const loadBooks = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
+      const downloaded = await isBookDownloaded(language);
+      if (!downloaded) {
+        console.log('[BooksScreen] Book not downloaded, showing modal');
+        setShowDownloadModal(true);
+        setIsLoading(false);
+        return;
+      }
+      
       console.log('[BooksScreen] Loading books for language:', language);
       const booksList = await getBooks(language);
       console.log('[BooksScreen] Books loaded:', booksList.length, booksList);
@@ -39,7 +50,12 @@ export default function BooksScreen() {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('[BooksScreen] Error loading books:', errorMessage, error);
-      setError(errorMessage);
+      
+      if (errorMessage.includes('not downloaded')) {
+        setShowDownloadModal(true);
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -112,6 +128,15 @@ export default function BooksScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <BookDownloadModal
+        visible={showDownloadModal}
+        onClose={() => setShowDownloadModal(false)}
+        onDownloadComplete={() => {
+          setShowDownloadModal(false);
+          loadBooks();
+        }}
+      />
+      
       <View style={[styles.header, { backgroundColor: colors.cardBackground, borderBottomColor: colors.border }]}>
         <View style={styles.headerTop}>
           <View>

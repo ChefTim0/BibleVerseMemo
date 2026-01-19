@@ -1,17 +1,14 @@
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Linking, Switch, Alert, Platform } from "react-native";
 import { Picker } from '@react-native-picker/picker';
-import { Check, Heart, BookOpen, Sun, Moon, LogIn, LogOut, Users, Brain, Download, Upload } from "lucide-react-native";
+import { Check, Heart, BookOpen, Sun, Moon, Brain, Download, Upload } from "lucide-react-native";
 import { useApp } from "../../contexts/AppContext";
-import { useAuth } from "../../contexts/AuthContext";
 import { t } from "../../constants/translations";
 import { getColors } from "../../constants/colors";
 import type { LearningMode, Theme, Language } from "../../types/database";
 import { File, Paths } from 'expo-file-system';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Sharing from 'expo-sharing';
-import { USE_SUPABASE, PROGRESSION_FILE_VERSION } from "../../constants/features";
-
-import { useRouter } from "expo-router";
+import { PROGRESSION_FILE_VERSION } from "../../constants/features";
 
 const LANGUAGES: { code: Language; name: string; flag: string }[] = [
   { code: 'LSG', name: 'Français - Louis Segond 1910', flag: '🇫🇷' },
@@ -37,28 +34,8 @@ const LANGUAGES: { code: Language; name: string; flag: string }[] = [
 
 export default function SettingsScreen() {
   const { language, uiLanguage, learningMode, theme, dyslexiaSettings, lineByLineSettings, progress, setLanguage, setLearningMode, setTheme, setDyslexiaSettings, setLineByLineSettings } = useApp();
-  const { isAuthenticated, user, logout } = useAuth();
   const colors = getColors(theme);
-  const router = useRouter();
 
-
-  const handleLogout = async () => {
-    Alert.alert(
-      t(uiLanguage, 'logout'),
-      t(uiLanguage, 'logoutConfirm'),
-      [
-        { text: t(uiLanguage, 'cancel'), style: 'cancel' },
-        {
-          text: t(uiLanguage, 'logout'),
-          style: 'destructive',
-          onPress: async () => {
-            await logout();
-            Alert.alert(t(uiLanguage, 'success'), t(uiLanguage, 'loggedOutSuccess'));
-          },
-        },
-      ]
-    );
-  };
 
   const handleLanguageChange = async (lang: Language) => {
     await setLanguage(lang);
@@ -211,49 +188,7 @@ export default function SettingsScreen() {
       </View>
 
       <ScrollView style={styles.content}>
-        {USE_SUPABASE && isAuthenticated && (
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t(uiLanguage, 'account')}</Text>
-            
-            <View style={[styles.option, { backgroundColor: colors.cardBackground }]}>
-              <Text style={[styles.optionText, { color: colors.text }]}>{t(uiLanguage, 'loggedInAs')}: {user?.username}</Text>
-            </View>
-
-            <TouchableOpacity
-              style={[styles.friendsButton, { backgroundColor: colors.primary }]}
-              onPress={() => router.push('/friends' as any)}
-            >
-              <Users color="#FFFFFF" size={20} />
-              <Text style={styles.friendsButtonText}>{t(uiLanguage, 'friends')}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.logoutButton, { backgroundColor: colors.error + '20' }]}
-              onPress={handleLogout}
-            >
-              <LogOut color={colors.error} size={20} />
-              <Text style={[styles.logoutText, { color: colors.error }]}>{t(uiLanguage, 'logout')}</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {USE_SUPABASE && !isAuthenticated && (
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t(uiLanguage, 'account')}</Text>
-            
-            <TouchableOpacity
-              style={[styles.loginButton, { backgroundColor: colors.primary }]}
-              onPress={() => router.push('/auth/login' as any)}
-            >
-              <LogIn color="#FFFFFF" size={20} />
-              <Text style={styles.loginButtonText}>{t(uiLanguage, 'loginSignUp')}</Text>
-            </TouchableOpacity>
-            
-            <Text style={[styles.accountInfo, { color: colors.textSecondary }]}>{t(uiLanguage, 'loginToSync')}</Text>
-          </View>
-        )}
-
-        {!USE_SUPABASE && Platform.OS === 'android' && (
+        {Platform.OS === 'android' && (
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>{t(uiLanguage, 'dataManagement')}</Text>
             
@@ -430,11 +365,7 @@ export default function SettingsScreen() {
             <Text style={styles.donateButtonText}>{t(uiLanguage, 'donate')}</Text>
           </TouchableOpacity>
           
-          <Text style={[styles.donateInfo, { color: colors.textSecondary }]}>
-            {t(uiLanguage, 'donateInfo')}
-          </Text>
-          
-          <Text style={[styles.footerText, { color: colors.textTertiary }]}>
+          <Text style={[styles.footerText, { color: colors.textTertiary, marginTop: 24 }]}>
             {t(uiLanguage, 'footerText')}
           </Text>
         </View>

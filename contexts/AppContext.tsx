@@ -1,10 +1,7 @@
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import type { Language, LearningMode, VerseProgress, Theme, DyslexiaSettings, LineByLineSettings } from '../types/database';
-import { useAuth } from './AuthContext';
-import { loadProgressFromSupabase, updateVerseProgressInSupabase } from '../lib/supabase-sync';
-import { USE_SUPABASE } from '../constants/features';
 
 interface AppState {
   language: Language;
@@ -57,89 +54,14 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
     enabled: false,
   });
   const [isLoading, setIsLoading] = useState(true);
-  const hasSynced = useRef(false);
   
   const uiLanguage = getUILanguage(language);
-
-  const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
     loadSettings();
   }, []);
 
-  const syncLocalProgressToSupabase = useCallback(async (userId: string) => {
-    if (!USE_SUPABASE) {
-      console.log('[Sync] Supabase disabled - skipping sync');
-      return;
-    }
 
-    try {
-      console.log('[Sync] Starting sync for user:', userId);
-      
-      const storedProgress = await AsyncStorage.getItem(PROGRESS_KEY);
-      const localProgress: VerseProgress[] = storedProgress ? JSON.parse(storedProgress) : [];
-      console.log('[Sync] Local progress count:', localProgress.length);
-      
-      const remoteProgress = await loadProgressFromSupabase(userId);
-      console.log('[Sync] Remote progress count:', remoteProgress.length);
-      
-      const mergedProgress: VerseProgress[] = [];
-      const progressMap = new Map<string, VerseProgress>();
-      
-      localProgress.forEach(p => {
-        const key = `${p.book}-${p.chapter}-${p.verse}`;
-        progressMap.set(key, p);
-      });
-      
-      remoteProgress.forEach(p => {
-        const key = `${p.book}-${p.chapter}-${p.verse}`;
-        const existing = progressMap.get(key);
-        
-        if (!existing) {
-          progressMap.set(key, p);
-        } else {
-          progressMap.set(key, {
-            book: p.book,
-            chapter: p.chapter,
-            verse: p.verse,
-            attempts: Math.max(existing.attempts, p.attempts),
-            correctGuesses: Math.max(existing.correctGuesses, p.correctGuesses),
-            lastPracticed: existing.lastPracticed > p.lastPracticed ? existing.lastPracticed : p.lastPracticed,
-            completed: existing.completed || p.completed,
-            started: existing.started || p.started,
-            masteryLevel: Math.max(existing.masteryLevel, p.masteryLevel),
-            memorized: existing.memorized || p.memorized,
-          });
-        }
-      });
-      
-      progressMap.forEach(p => mergedProgress.push(p));
-      console.log('[Sync] Merged progress count:', mergedProgress.length);
-      
-      if (mergedProgress.length > 0) {
-        for (const p of mergedProgress) {
-          await updateVerseProgressInSupabase(p, userId);
-        }
-        console.log('[Sync] All progress synced to Supabase');
-      }
-      
-      setProgress(mergedProgress);
-      await AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(mergedProgress));
-    } catch (error) {
-      console.error('[Sync] Error syncing progress:', error);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isAuthenticated && user?.id && !hasSynced.current) {
-      hasSynced.current = true;
-      syncLocalProgressToSupabase(user.id);
-    }
-    
-    if (!isAuthenticated) {
-      hasSynced.current = false;
-    }
-  }, [isAuthenticated, user?.id, syncLocalProgressToSupabase]);
 
   const loadSettings = async () => {
     try {
@@ -217,14 +139,6 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
 
     setProgress(newProgress);
     await AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(newProgress));
-
-    if (USE_SUPABASE && isAuthenticated && user?.id) {
-      try {
-        await updateVerseProgressInSupabase(verseProgress, user.id);
-      } catch (error) {
-        console.error('Failed to sync progress to Supabase:', error);
-      }
-    }
   };
 
   const resetVerseProgress = async (book: string, chapter: number, verse: number) => {
