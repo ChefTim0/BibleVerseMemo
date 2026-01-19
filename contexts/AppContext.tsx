@@ -54,7 +54,6 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
     enabled: false,
     fontSize: 18,
     lineHeight: 32,
-    tolerantValidation: true,
   });
   const [lineByLineSettings, setLineByLineSettingsState] = useState<LineByLineSettings>({
     enabled: false,

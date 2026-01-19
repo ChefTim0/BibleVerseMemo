@@ -36,7 +36,6 @@ export interface DyslexiaSettings {
   enabled: boolean;
   fontSize: number;
   lineHeight: number;
-  tolerantValidation: boolean;
 }
 
 export interface LineByLineSettings {

@@ -95,10 +95,6 @@ export default function LearnScreen() {
     }
   };
 
-  const normalizePunctuation = (text: string): string => {
-    return text.replace(/[.,;:!?"'()\[\]{}]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
-  };
-
   const handleNextLine = () => {
     if (currentLineIndex < verseLines.length - 1) {
       setCurrentLineIndex(prev => prev + 1);
@@ -118,35 +114,29 @@ export default function LearnScreen() {
       if (lineByLineSettings.enabled) {
         const currentLine = verseLines[currentLineIndex];
         
-        if (dyslexiaSettings.tolerantValidation) {
-          const result = checkDyslexiaFriendlyMatch(userAnswer, currentLine, {
-            toleranceLevel: learningSettings.validationTolerance,
-          });
-          correct = result.isMatch;
-          console.log('[Dyslexia Line Check]', {
-            currentLine,
-            userAnswer,
-            similarity: result.similarity,
-            isMatch: result.isMatch,
-          });
-        } else {
-          const normalizedAnswer = normalizePunctuation(userAnswer);
-          const normalizedLine = normalizePunctuation(currentLine);
-          correct = normalizedAnswer === normalizedLine;
-        }
+        const result = checkDyslexiaFriendlyMatch(userAnswer, currentLine, {
+          toleranceLevel: learningSettings.validationTolerance,
+        });
+        correct = result.isMatch;
+        console.log('[Line Check]', {
+          currentLine,
+          userAnswer,
+          similarity: result.similarity,
+          isMatch: result.isMatch,
+        });
       } else {
         const textToCheck = verseData.text;
         
-        if (dyslexiaSettings.enabled && dyslexiaSettings.tolerantValidation) {
-          const result = checkDyslexiaFriendlyMatch(userAnswer, textToCheck, {
-            toleranceLevel: learningSettings.validationTolerance,
-          });
-          correct = result.isMatch;
-        } else {
-          const normalizedAnswer = normalizePunctuation(userAnswer);
-          const normalizedVerse = normalizePunctuation(textToCheck);
-          correct = normalizedAnswer === normalizedVerse;
-        }
+        const result = checkDyslexiaFriendlyMatch(userAnswer, textToCheck, {
+          toleranceLevel: learningSettings.validationTolerance,
+        });
+        correct = result.isMatch;
+        console.log('[Verse Check]', {
+          verseText: textToCheck,
+          userAnswer,
+          similarity: result.similarity,
+          isMatch: result.isMatch,
+        });
       }
     } else {
       const normalizedAnswer = userAnswer.trim().toLowerCase();

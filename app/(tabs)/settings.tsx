@@ -141,7 +141,7 @@ export default function SettingsScreen() {
           text: t(uiLanguage, 'reset'),
           style: 'destructive',
           onPress: async () => {
-            await setDyslexiaSettings({ enabled: false, fontSize: 18, lineHeight: 32, tolerantValidation: true });
+            await setDyslexiaSettings({ enabled: false, fontSize: 18, lineHeight: 32 });
             await setLineByLineSettings({ enabled: false, wordsPerLine: 5 });
             await setAppearanceSettings({ fontSize: 16, lineHeight: 24, wordSpacing: 0, borderRadius: 12, cardOpacity: 1, animationsEnabled: true });
             await setLearningSettings({ autoAdvance: false, showHints: true, maxHints: 10, validationTolerance: 0.8, autoMarkMemorized: false, autoMarkThreshold: 5, hapticFeedback: true, soundEffects: false });
@@ -303,19 +303,37 @@ export default function SettingsScreen() {
 
           {dyslexiaSettings.enabled && (
             <>
-              <View style={[styles.option, { backgroundColor: colors.cardBackground }]}>
-                <Text style={[styles.optionText, { color: colors.text }]}>{t(uiLanguage, 'fontSize')}: {dyslexiaSettings.fontSize}px</Text>
+              <View style={[styles.sliderContainer, { backgroundColor: colors.cardBackground }]}>
+                <Text style={[styles.sliderLabel, { color: colors.text }]}>
+                  {t(uiLanguage, 'fontSize')}: {dyslexiaSettings.fontSize}px
+                </Text>
+                <Slider
+                  style={styles.slider}
+                  minimumValue={14}
+                  maximumValue={28}
+                  step={1}
+                  value={dyslexiaSettings.fontSize}
+                  onValueChange={(value: number) => setDyslexiaSettings({ fontSize: value })}
+                  minimumTrackTintColor={colors.primary}
+                  maximumTrackTintColor={colors.border}
+                  thumbTintColor={colors.primary}
+                />
               </View>
 
-              <View style={[styles.option, { backgroundColor: colors.cardBackground }]}>
-                <View style={styles.themeOption}>
-                  <Text style={[styles.optionText, { color: colors.text }]}>{t(uiLanguage, 'tolerantValidation')}</Text>
-                </View>
-                <Switch
-                  value={dyslexiaSettings.tolerantValidation}
-                  onValueChange={(value) => setDyslexiaSettings({ tolerantValidation: value })}
-                  trackColor={{ false: colors.border, true: colors.primary + '80' }}
-                  thumbColor={dyslexiaSettings.tolerantValidation ? colors.primary : colors.textTertiary}
+              <View style={[styles.sliderContainer, { backgroundColor: colors.cardBackground }]}>
+                <Text style={[styles.sliderLabel, { color: colors.text }]}>
+                  {t(uiLanguage, 'lineSpacing')}: {dyslexiaSettings.lineHeight}px
+                </Text>
+                <Slider
+                  style={styles.slider}
+                  minimumValue={20}
+                  maximumValue={48}
+                  step={2}
+                  value={dyslexiaSettings.lineHeight}
+                  onValueChange={(value: number) => setDyslexiaSettings({ lineHeight: value })}
+                  minimumTrackTintColor={colors.primary}
+                  maximumTrackTintColor={colors.border}
+                  thumbTintColor={colors.primary}
                 />
               </View>
 
@@ -697,6 +715,7 @@ const styles = StyleSheet.create({
     flexDirection: "row" as const,
     alignItems: "center" as const,
     gap: 12,
+    flex: 1,
   },
   optionText: {
     fontSize: 16,
