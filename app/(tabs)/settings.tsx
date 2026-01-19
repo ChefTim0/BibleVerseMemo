@@ -1,7 +1,7 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Linking, Switch, Alert, Platform } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Linking, Switch, Alert, Platform, Modal } from "react-native";
 import Slider from '@react-native-community/slider';
 import { Picker } from '@react-native-picker/picker';
-import { Check, Heart, BookOpen, Sun, Moon, Brain, Download, Upload, RefreshCcw, Palette, Zap, Folder } from "lucide-react-native";
+import { Check, Heart, BookOpen, Sun, Moon, Brain, Download, Upload, RefreshCcw, Palette, Zap, Folder, Info, X } from "lucide-react-native";
 import { useApp } from "../../contexts/AppContext";
 import { t } from "../../constants/translations";
 import { getColors } from "../../constants/colors";
@@ -10,6 +10,7 @@ import { File, Paths } from 'expo-file-system';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Sharing from 'expo-sharing';
 import { PROGRESSION_FILE_VERSION } from "../../constants/features";
+import React from "react";
 
 const LANGUAGES: { code: Language; name: string; flag: string }[] = [
   { code: 'LSG', name: 'Français - Louis Segond 1910', flag: '🇫🇷' },
@@ -36,6 +37,7 @@ const LANGUAGES: { code: Language; name: string; flag: string }[] = [
 export default function SettingsScreen() {
   const { language, uiLanguage, learningMode, theme, dyslexiaSettings, lineByLineSettings, appearanceSettings, learningSettings, progress, setLanguage, setLearningMode, setTheme, setDyslexiaSettings, setLineByLineSettings, setAppearanceSettings, setLearningSettings } = useApp();
   const colors = getColors(theme);
+  const [showAboutModal, setShowAboutModal] = React.useState(false);
 
 
   const handleLanguageChange = async (lang: Language) => {
@@ -607,6 +609,15 @@ export default function SettingsScreen() {
             <Folder color="#3B82F6" size={20} />
             <Text style={styles.myProjectsButtonText}>{t(uiLanguage, 'myProjects')}</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.aboutButton}
+            onPress={() => setShowAboutModal(true)}
+            activeOpacity={0.8}
+          >
+            <Info color={colors.primary} size={20} />
+            <Text style={[styles.aboutButtonText, { color: colors.primary }]}>{t(uiLanguage, 'about')}</Text>
+          </TouchableOpacity>
           
           <Text style={[styles.footerText, { color: colors.textTertiary, marginTop: 24 }]}>
             {t(uiLanguage, 'footerText')}
@@ -622,6 +633,46 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <Modal
+        visible={showAboutModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowAboutModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>{t(uiLanguage, 'about')}</Text>
+              <TouchableOpacity
+                onPress={() => setShowAboutModal(false)}
+                style={styles.closeButton}
+              >
+                <X color={colors.text} size={24} />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.modalBody}>
+              <Text style={[styles.aboutLabel, { color: colors.textSecondary }]}>{t(uiLanguage, 'version')}:</Text>
+              <Text style={[styles.aboutValue, { color: colors.text }]}>1.0.0</Text>
+              
+              <Text style={[styles.aboutLabel, { color: colors.textSecondary, marginTop: 24 }]}>{t(uiLanguage, 'credits')}:</Text>
+              <View style={styles.creditItem}>
+                <Text style={[styles.creditLabel, { color: colors.textSecondary }]}>- {t(uiLanguage, 'application')}:</Text>
+                <Text style={[styles.creditValue, { color: colors.text }]}>Timothée M.</Text>
+              </View>
+              <View style={styles.creditItem}>
+                <Text style={[styles.creditLabel, { color: colors.textSecondary }]}>- {t(uiLanguage, 'notificationIcon')}:</Text>
+                <Text style={[styles.creditValue, { color: colors.text }]}>Juicy_Fish</Text>
+              </View>
+              <View style={styles.creditItem}>
+                <Text style={[styles.creditLabel, { color: colors.textSecondary }]}>- {t(uiLanguage, 'notificationSound')}:</Text>
+                <Text style={[styles.creditValue, { color: colors.text }]}>uppbeat.io</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -843,5 +894,74 @@ const styles = StyleSheet.create({
   resetButtonText: {
     fontSize: 16,
     fontWeight: "600" as const,
+  },
+  aboutButton: {
+    backgroundColor: 'transparent',
+    padding: 16,
+    borderRadius: 12,
+    flexDirection: "row" as const,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    gap: 8,
+    marginTop: 12,
+  },
+  aboutButtonText: {
+    fontSize: 16,
+    fontWeight: "500" as const,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    padding: 20,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: 16,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: "row" as const,
+    justifyContent: "space-between" as const,
+    alignItems: "center" as const,
+    marginBottom: 24,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: "700" as const,
+  },
+  closeButton: {
+    padding: 4,
+  },
+  modalBody: {
+    gap: 8,
+  },
+  aboutLabel: {
+    fontSize: 14,
+    fontWeight: "600" as const,
+    marginBottom: 4,
+  },
+  aboutValue: {
+    fontSize: 18,
+    fontWeight: "500" as const,
+  },
+  creditItem: {
+    marginTop: 8,
+  },
+  creditLabel: {
+    fontSize: 14,
+    marginBottom: 2,
+  },
+  creditValue: {
+    fontSize: 16,
+    fontWeight: "500" as const,
+    marginLeft: 16,
   },
 });
