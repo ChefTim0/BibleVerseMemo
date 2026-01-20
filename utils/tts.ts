@@ -45,15 +45,50 @@ export function getLanguageCode(bibleVersion: string): string {
   return LANGUAGE_CODES[bibleVersion] || 'en-US';
 }
 
+function detectGender(voiceName: string, identifier: string): 'male' | 'female' | 'unknown' {
+  const name = (voiceName + ' ' + identifier).toLowerCase();
+  
+  const femaleIndicators = ['female', 'woman', 'girl', 'feminine', 
+    'hortense', 'julie', 'amelie', 'marie', 'anna', 'sara', 'karen', 'moira', 'fiona', 'samantha',
+    'zira', 'hazel', 'susan', 'linda', 'catherine', 'alice', 'elena', 'monica', 'lucia', 'paulina',
+    'sabina', 'helena', 'ioana', 'carmit', 'milena', 'tessa', 'melina', 'yelda', 'damayanti',
+    'lekha', 'mariska', 'ting-ting', 'sin-ji', 'mei-jia', 'kyoko', 'yuna', 'zosia'];
+  
+  const maleIndicators = ['male', 'man', 'boy', 'masculine',
+    'paul', 'thomas', 'david', 'daniel', 'mark', 'james', 'george', 'alex', 'luca', 'jorge',
+    'diego', 'juan', 'rishi', 'maged', 'yuri', 'xander', 'aaron', 'fred', 'ralph', 'bruce'];
+  
+  for (const indicator of femaleIndicators) {
+    if (name.includes(indicator)) return 'female';
+  }
+  
+  for (const indicator of maleIndicators) {
+    if (name.includes(indicator)) return 'male';
+  }
+  
+  return 'unknown';
+}
+
 export async function getAvailableVoices(): Promise<TTSVoice[]> {
   try {
     const voices = await Speech.getAvailableVoicesAsync();
-    console.log('[TTS] Available voices:', voices.length);
-    return voices.map(v => ({
-      identifier: v.identifier,
-      name: v.name,
-      language: v.language,
-    }));
+    console.log('[TTS] Raw voices count:', voices.length);
+    
+    const mappedVoices = voices
+      .filter(v => v.identifier && v.language)
+      .map((v, index) => {
+        const displayName = v.name || v.identifier || `Voice ${index + 1}`;
+        const gender = detectGender(displayName, v.identifier);
+        return {
+          identifier: v.identifier || `voice-${index}`,
+          name: displayName,
+          language: v.language,
+          gender,
+        };
+      });
+    
+    console.log('[TTS] Mapped voices:', mappedVoices.length);
+    return mappedVoices;
   } catch (error) {
     console.error('[TTS] Failed to get voices:', error);
     return [];
@@ -64,12 +99,36 @@ export async function getVoicesForLanguage(languageCode: string): Promise<TTSVoi
   try {
     const allVoices = await getAvailableVoices();
     const langPrefix = languageCode.split('-')[0].toLowerCase();
+    
     const filteredVoices = allVoices.filter(v => {
       const voiceLang = v.language.toLowerCase();
       return voiceLang.startsWith(langPrefix) || voiceLang.includes(langPrefix);
     });
-    console.log('[TTS] Voices for language', languageCode, ':', filteredVoices.length);
-    return filteredVoices;
+    
+    const femaleVoices = filteredVoices.filter(v => v.gender === 'female');
+    const maleVoices = filteredVoices.filter(v => v.gender === 'male');
+    const unknownVoices = filteredVoices.filter(v => v.gender === 'unknown');
+    
+    const selectedVoices: TTSVoice[] = [];
+    
+    if (femaleVoices.length > 0) {
+      selectedVoices.push(femaleVoices[0]);
+    }
+    if (maleVoices.length > 0) {
+      selectedVoices.push(maleVoices[0]);
+    }
+    
+    if (selectedVoices.length < 2 && unknownVoices.length > 0) {
+      const needed = 2 - selectedVoices.length;
+      selectedVoices.push(...unknownVoices.slice(0, needed));
+    }
+    
+    if (selectedVoices.length === 0 && filteredVoices.length > 0) {
+      selectedVoices.push(...filteredVoices.slice(0, 2));
+    }
+    
+    console.log('[TTS] Selected voices for', languageCode, ':', selectedVoices.map(v => `${v.name} (${v.gender})`));
+    return selectedVoices;
   } catch (error) {
     console.error('[TTS] Failed to filter voices:', error);
     return [];

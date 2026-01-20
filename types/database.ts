@@ -65,6 +65,7 @@ export interface TTSVoice {
   identifier: string;
   name: string;
   language: string;
+  gender?: 'male' | 'female' | 'unknown';
 }
 
 export interface TTSSettings {

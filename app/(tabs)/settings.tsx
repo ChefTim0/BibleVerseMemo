@@ -635,45 +635,54 @@ export default function SettingsScreen() {
                 </View>
               </TouchableOpacity>
 
-              {availableVoices.map((voice) => (
-                <TouchableOpacity
-                  key={voice.identifier}
-                  style={[
-                    styles.voiceOption,
-                    {
-                      backgroundColor: ttsSettings.voiceIdentifier === voice.identifier ? colors.primary + '20' : colors.cardBackground,
-                      borderColor: ttsSettings.voiceIdentifier === voice.identifier ? colors.primary : colors.border,
-                    },
-                  ]}
-                  onPress={() => handleVoiceChange(voice.identifier)}
-                >
-                  <View style={styles.voiceInfo}>
-                    <Text
-                      style={[styles.voiceName, { color: ttsSettings.voiceIdentifier === voice.identifier ? colors.primary : colors.text }]}
-                      numberOfLines={1}
-                    >
-                      {voice.name}
-                    </Text>
-                    <Text style={[styles.voiceLanguage, { color: colors.textSecondary }]} numberOfLines={1}>
-                      {voice.language}
-                    </Text>
-                  </View>
-                  <View style={styles.voiceActions}>
-                    <TouchableOpacity
-                      style={[styles.voiceTestButton, { backgroundColor: colors.info + '20' }]}
-                      onPress={() => testVoice(voice.identifier)}
-                      disabled={testingVoice !== null}
-                    >
-                      {testingVoice === voice.identifier ? (
-                        <ActivityIndicator size="small" color={colors.info} />
-                      ) : (
-                        <Play size={14} color={colors.info} />
-                      )}
-                    </TouchableOpacity>
-                    {ttsSettings.voiceIdentifier === voice.identifier && <Check color={colors.primary} size={18} />}
-                  </View>
-                </TouchableOpacity>
-              ))}
+              {availableVoices.map((voice, index) => {
+                const genderLabel = voice.gender === 'female' ? '♀' : voice.gender === 'male' ? '♂' : '';
+                const genderColor = voice.gender === 'female' ? '#EC4899' : voice.gender === 'male' ? '#3B82F6' : colors.textSecondary;
+                return (
+                  <TouchableOpacity
+                    key={`${voice.identifier}-${index}`}
+                    style={[
+                      styles.voiceOption,
+                      {
+                        backgroundColor: ttsSettings.voiceIdentifier === voice.identifier ? colors.primary + '20' : colors.cardBackground,
+                        borderColor: ttsSettings.voiceIdentifier === voice.identifier ? colors.primary : colors.border,
+                      },
+                    ]}
+                    onPress={() => handleVoiceChange(voice.identifier)}
+                  >
+                    <View style={styles.voiceInfo}>
+                      <View style={styles.voiceNameRow}>
+                        <Text
+                          style={[styles.voiceName, { color: ttsSettings.voiceIdentifier === voice.identifier ? colors.primary : colors.text }]}
+                          numberOfLines={1}
+                        >
+                          {voice.name}
+                        </Text>
+                        {genderLabel ? (
+                          <Text style={[styles.voiceGender, { color: genderColor }]}>{genderLabel}</Text>
+                        ) : null}
+                      </View>
+                      <Text style={[styles.voiceLanguage, { color: colors.textSecondary }]} numberOfLines={1}>
+                        {voice.language}
+                      </Text>
+                    </View>
+                    <View style={styles.voiceActions}>
+                      <TouchableOpacity
+                        style={[styles.voiceTestButton, { backgroundColor: colors.info + '20' }]}
+                        onPress={() => testVoice(voice.identifier)}
+                        disabled={testingVoice !== null}
+                      >
+                        {testingVoice === voice.identifier ? (
+                          <ActivityIndicator size="small" color={colors.info} />
+                        ) : (
+                          <Play size={14} color={colors.info} />
+                        )}
+                      </TouchableOpacity>
+                      {ttsSettings.voiceIdentifier === voice.identifier && <Check color={colors.primary} size={18} />}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           )}
 
@@ -1198,6 +1207,16 @@ const styles = StyleSheet.create({
   voiceName: {
     fontSize: 14,
     fontWeight: "600" as const,
+    flex: 1,
+  },
+  voiceNameRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 6,
+  },
+  voiceGender: {
+    fontSize: 16,
+    fontWeight: "700" as const,
   },
   voiceLanguage: {
     fontSize: 12,
