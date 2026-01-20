@@ -61,6 +61,13 @@ export interface LearningSettings {
 
 export type TTSSpeed = 'slow' | 'normal' | 'fast';
 
+export interface TTSVoice {
+  identifier: string;
+  name: string;
+  language: string;
+}
+
 export interface TTSSettings {
   speed: TTSSpeed;
+  voiceIdentifier?: string;
 }

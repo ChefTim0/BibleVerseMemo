@@ -1,16 +1,17 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Linking, Switch, Alert, Platform, Modal } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Linking, Switch, Alert, Platform, Modal, ActivityIndicator } from "react-native";
 import Slider from '@react-native-community/slider';
 import { Picker } from '@react-native-picker/picker';
-import { Check, Heart, BookOpen, Sun, Moon, Brain, Download, Upload, RefreshCcw, Palette, Zap, Folder, Info, X, Volume2 } from "lucide-react-native";
+import { Check, Heart, BookOpen, Sun, Moon, Brain, Download, Upload, RefreshCcw, Palette, Zap, Folder, Info, X, Volume2, Play } from "lucide-react-native";
 import { useApp } from "../../contexts/AppContext";
 import { t } from "../../constants/translations";
 import { getColors } from "../../constants/colors";
-import type { LearningMode, Theme, Language, TTSSpeed } from "../../types/database";
+import type { LearningMode, Theme, Language, TTSSpeed, TTSVoice } from "../../types/database";
 import { File, Paths } from 'expo-file-system';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Sharing from 'expo-sharing';
 import { PROGRESSION_FILE_VERSION } from "../../constants/features";
-import React from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import { getVoicesForLanguage, getLanguageCode, speak, stop } from "../../utils/tts";
 
 const LANGUAGES: { code: Language; name: string; flag: string }[] = [
   { code: 'LSG', name: 'Français - Louis Segond 1910', flag: '🇫🇷' },
@@ -37,7 +38,55 @@ const LANGUAGES: { code: Language; name: string; flag: string }[] = [
 export default function SettingsScreen() {
   const { language, uiLanguage, learningMode, theme, dyslexiaSettings, lineByLineSettings, appearanceSettings, learningSettings, ttsSettings, progress, setLanguage, setLearningMode, setTheme, setDyslexiaSettings, setLineByLineSettings, setAppearanceSettings, setLearningSettings, setTTSSettings } = useApp();
   const colors = getColors(theme);
-  const [showAboutModal, setShowAboutModal] = React.useState(false);
+  const [showAboutModal, setShowAboutModal] = useState(false);
+  const [availableVoices, setAvailableVoices] = useState<TTSVoice[]>([]);
+  const [loadingVoices, setLoadingVoices] = useState(false);
+  const [testingVoice, setTestingVoice] = useState<string | null>(null);
+
+  const loadVoices = useCallback(async () => {
+    setLoadingVoices(true);
+    try {
+      const langCode = getLanguageCode(language);
+      const voices = await getVoicesForLanguage(langCode);
+      setAvailableVoices(voices);
+      console.log('[Settings] Loaded voices for', langCode, ':', voices.length);
+    } catch (error) {
+      console.error('[Settings] Failed to load voices:', error);
+    } finally {
+      setLoadingVoices(false);
+    }
+  }, [language]);
+
+  useEffect(() => {
+    loadVoices();
+  }, [loadVoices]);
+
+  const handleVoiceChange = async (voiceIdentifier: string | undefined) => {
+    await setTTSSettings({ voiceIdentifier });
+  };
+
+  const testVoice = async (voiceIdentifier: string | undefined) => {
+    const testText = language.startsWith('fr') || language === 'LSG' || language === 'FOB'
+      ? 'Ceci est un test de la voix sélectionnée.'
+      : language === 'KJV'
+      ? 'This is a test of the selected voice.'
+      : language.startsWith('es') || language === 'RVA' || language === 'spavbl'
+      ? 'Esta es una prueba de la voz seleccionada.'
+      : language.startsWith('de') || language === 'ELB71' || language === 'ELB' || language === 'LUTH1545' || language === 'deu1912' || language === 'deutkw'
+      ? 'Dies ist ein Test der ausgewählten Stimme.'
+      : language.startsWith('it') || language === 'ITADIO' || language === 'CEI'
+      ? 'Questo è un test della voce selezionata.'
+      : 'This is a test of the selected voice.';
+
+    setTestingVoice(voiceIdentifier || 'default');
+    await speak(testText, {
+      language,
+      speed: ttsSettings.speed,
+      voiceIdentifier,
+      onDone: () => setTestingVoice(null),
+      onError: () => setTestingVoice(null),
+    });
+  };
 
 
   const handleLanguageChange = async (lang: Language) => {
@@ -159,7 +208,7 @@ export default function SettingsScreen() {
             await setLineByLineSettings({ enabled: false, wordsPerLine: 5 });
             await setAppearanceSettings({ fontSize: 16, animationsEnabled: true });
             await setLearningSettings({ autoAdvance: false, showHints: true, maxHints: 10, autoMarkMemorized: false, autoMarkThreshold: 5, hapticFeedback: true });
-            await setTTSSettings({ speed: 'normal' });
+            await setTTSSettings({ speed: 'normal', voiceIdentifier: undefined });
             Alert.alert(t(uiLanguage, 'success'), t(uiLanguage, 'settingsReset'));
           },
         },
@@ -169,6 +218,11 @@ export default function SettingsScreen() {
 
   const handleTTSSpeedChange = async (speed: TTSSpeed) => {
     await setTTSSettings({ speed });
+  };
+
+  const handleResetVoice = async () => {
+    await stop();
+    await setTTSSettings({ voiceIdentifier: undefined });
   };
 
   const handleImportProgression = async () => {
@@ -530,6 +584,102 @@ export default function SettingsScreen() {
               {ttsSettings.speed === 'fast' && <Check color={colors.primary} size={16} />}
             </TouchableOpacity>
           </View>
+
+          <Text style={[styles.sliderLabel, { color: colors.text, marginTop: 16, marginBottom: 8, paddingHorizontal: 4 }]}>
+            {t(uiLanguage, 'ttsVoice')}
+          </Text>
+
+          {loadingVoices ? (
+            <View style={[styles.voiceLoadingContainer, { backgroundColor: colors.cardBackground }]}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text style={[styles.voiceLoadingText, { color: colors.textSecondary }]}>
+                {t(uiLanguage, 'ttsLoadingVoices')}
+              </Text>
+            </View>
+          ) : availableVoices.length === 0 ? (
+            <View style={[styles.voiceEmptyContainer, { backgroundColor: colors.cardBackground }]}>
+              <Text style={[styles.voiceEmptyText, { color: colors.textSecondary }]}>
+                {t(uiLanguage, 'ttsNoVoices')}
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.voicesContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.voiceOption,
+                  {
+                    backgroundColor: !ttsSettings.voiceIdentifier ? colors.primary + '20' : colors.cardBackground,
+                    borderColor: !ttsSettings.voiceIdentifier ? colors.primary : colors.border,
+                  },
+                ]}
+                onPress={() => handleVoiceChange(undefined)}
+              >
+                <View style={styles.voiceInfo}>
+                  <Text style={[styles.voiceName, { color: !ttsSettings.voiceIdentifier ? colors.primary : colors.text }]}>
+                    {t(uiLanguage, 'ttsDefaultVoice')}
+                  </Text>
+                </View>
+                <View style={styles.voiceActions}>
+                  <TouchableOpacity
+                    style={[styles.voiceTestButton, { backgroundColor: colors.info + '20' }]}
+                    onPress={() => testVoice(undefined)}
+                    disabled={testingVoice !== null}
+                  >
+                    {testingVoice === 'default' ? (
+                      <ActivityIndicator size="small" color={colors.info} />
+                    ) : (
+                      <Play size={14} color={colors.info} />
+                    )}
+                  </TouchableOpacity>
+                  {!ttsSettings.voiceIdentifier && <Check color={colors.primary} size={18} />}
+                </View>
+              </TouchableOpacity>
+
+              {availableVoices.map((voice) => (
+                <TouchableOpacity
+                  key={voice.identifier}
+                  style={[
+                    styles.voiceOption,
+                    {
+                      backgroundColor: ttsSettings.voiceIdentifier === voice.identifier ? colors.primary + '20' : colors.cardBackground,
+                      borderColor: ttsSettings.voiceIdentifier === voice.identifier ? colors.primary : colors.border,
+                    },
+                  ]}
+                  onPress={() => handleVoiceChange(voice.identifier)}
+                >
+                  <View style={styles.voiceInfo}>
+                    <Text
+                      style={[styles.voiceName, { color: ttsSettings.voiceIdentifier === voice.identifier ? colors.primary : colors.text }]}
+                      numberOfLines={1}
+                    >
+                      {voice.name}
+                    </Text>
+                    <Text style={[styles.voiceLanguage, { color: colors.textSecondary }]} numberOfLines={1}>
+                      {voice.language}
+                    </Text>
+                  </View>
+                  <View style={styles.voiceActions}>
+                    <TouchableOpacity
+                      style={[styles.voiceTestButton, { backgroundColor: colors.info + '20' }]}
+                      onPress={() => testVoice(voice.identifier)}
+                      disabled={testingVoice !== null}
+                    >
+                      {testingVoice === voice.identifier ? (
+                        <ActivityIndicator size="small" color={colors.info} />
+                      ) : (
+                        <Play size={14} color={colors.info} />
+                      )}
+                    </TouchableOpacity>
+                    {ttsSettings.voiceIdentifier === voice.identifier && <Check color={colors.primary} size={18} />}
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          <Text style={[styles.dyslexiaInfo, { color: colors.textSecondary }]}>
+            {t(uiLanguage, 'ttsVoiceInfo')}
+          </Text>
         </View>
 
         <View style={styles.section}>
@@ -1029,5 +1179,57 @@ const styles = StyleSheet.create({
   ttsSpeedText: {
     fontSize: 14,
     fontWeight: "600" as const,
+  },
+  voicesContainer: {
+    gap: 8,
+  },
+  voiceOption: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "space-between" as const,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 2,
+  },
+  voiceInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  voiceName: {
+    fontSize: 14,
+    fontWeight: "600" as const,
+  },
+  voiceLanguage: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  voiceActions: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 8,
+  },
+  voiceTestButton: {
+    padding: 8,
+    borderRadius: 8,
+  },
+  voiceLoadingContainer: {
+    padding: 16,
+    borderRadius: 12,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: 12,
+  },
+  voiceLoadingText: {
+    fontSize: 14,
+  },
+  voiceEmptyContainer: {
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center" as const,
+  },
+  voiceEmptyText: {
+    fontSize: 14,
+    textAlign: "center" as const,
   },
 });

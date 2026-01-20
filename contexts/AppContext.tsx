@@ -94,6 +94,7 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
   });
   const [ttsSettings, setTTSSettingsState] = useState<TTSSettings>({
     speed: 'normal',
+    voiceIdentifier: undefined,
   });
   const [isLoading, setIsLoading] = useState(true);
   

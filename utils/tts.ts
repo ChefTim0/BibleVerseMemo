@@ -1,5 +1,6 @@
 import * as Speech from 'expo-speech';
 import { Platform } from 'react-native';
+import type { TTSVoice } from '../types/database';
 
 export type TTSSpeed = 'slow' | 'normal' | 'fast';
 
@@ -44,6 +45,37 @@ export function getLanguageCode(bibleVersion: string): string {
   return LANGUAGE_CODES[bibleVersion] || 'en-US';
 }
 
+export async function getAvailableVoices(): Promise<TTSVoice[]> {
+  try {
+    const voices = await Speech.getAvailableVoicesAsync();
+    console.log('[TTS] Available voices:', voices.length);
+    return voices.map(v => ({
+      identifier: v.identifier,
+      name: v.name,
+      language: v.language,
+    }));
+  } catch (error) {
+    console.error('[TTS] Failed to get voices:', error);
+    return [];
+  }
+}
+
+export async function getVoicesForLanguage(languageCode: string): Promise<TTSVoice[]> {
+  try {
+    const allVoices = await getAvailableVoices();
+    const langPrefix = languageCode.split('-')[0].toLowerCase();
+    const filteredVoices = allVoices.filter(v => {
+      const voiceLang = v.language.toLowerCase();
+      return voiceLang.startsWith(langPrefix) || voiceLang.includes(langPrefix);
+    });
+    console.log('[TTS] Voices for language', languageCode, ':', filteredVoices.length);
+    return filteredVoices;
+  } catch (error) {
+    console.error('[TTS] Failed to filter voices:', error);
+    return [];
+  }
+}
+
 export function getSpeedValue(speed: TTSSpeed): number {
   return SPEED_VALUES[speed];
 }
@@ -55,6 +87,7 @@ export async function speak(
   options: {
     language: string;
     speed: TTSSpeed;
+    voiceIdentifier?: string;
     onStart?: () => void;
     onDone?: () => void;
     onError?: (error: Error) => void;
@@ -68,11 +101,11 @@ export async function speak(
     const languageCode = getLanguageCode(options.language);
     const rate = getSpeedValue(options.speed);
 
-    console.log('[TTS] Speaking text with language:', languageCode, 'speed:', options.speed);
+    console.log('[TTS] Speaking text with language:', languageCode, 'speed:', options.speed, 'voice:', options.voiceIdentifier || 'default');
 
     isSpeakingGlobal = true;
 
-    Speech.speak(text, {
+    const speechOptions: Speech.SpeechOptions = {
       language: languageCode,
       rate,
       pitch: 1.0,
@@ -95,7 +128,13 @@ export async function speak(
         isSpeakingGlobal = false;
         options.onDone?.();
       },
-    });
+    };
+
+    if (options.voiceIdentifier && Platform.OS !== 'web') {
+      speechOptions.voice = options.voiceIdentifier;
+    }
+
+    Speech.speak(text, speechOptions);
   } catch (error) {
     console.error('[TTS] Failed to speak:', error);
     isSpeakingGlobal = false;
