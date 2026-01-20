@@ -58,3 +58,9 @@ export interface LearningSettings {
   autoMarkThreshold: number;
   hapticFeedback: boolean;
 }
+
+export type TTSSpeed = 'slow' | 'normal' | 'fast';
+
+export interface TTSSettings {
+  speed: TTSSpeed;
+}

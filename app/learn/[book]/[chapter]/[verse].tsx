@@ -1,8 +1,9 @@
 import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 import { useLocalSearchParams, Stack, useRouter } from "expo-router";
 import { useState, useEffect, useCallback } from "react";
-import { Lightbulb, Check, X, CheckCircle2 } from "lucide-react-native";
+import { Lightbulb, Check, X, CheckCircle2, Volume2, VolumeX } from "lucide-react-native";
 import * as Haptics from 'expo-haptics';
+import { speak, stop as stopTTS } from "../../../../utils/tts";
 import { useApp } from "../../../../contexts/AppContext";
 import { getVerse } from "../../../../utils/database";
 import { t, getBookName } from "../../../../constants/translations";
@@ -11,7 +12,7 @@ import { checkDyslexiaFriendlyMatch } from "../../../../utils/text-validation";
 import type { Verse } from "../../../../types/database";
 
 export default function LearnScreen() {
-  const { language, uiLanguage, learningMode, theme, dyslexiaSettings, lineByLineSettings, appearanceSettings, learningSettings, getVerseProgress, updateProgress, toggleMemorized } = useApp();
+  const { language, uiLanguage, learningMode, theme, dyslexiaSettings, lineByLineSettings, appearanceSettings, learningSettings, ttsSettings, getVerseProgress, updateProgress, toggleMemorized } = useApp();
   const colors = getColors(theme);
   const router = useRouter();
   const { book, chapter, verse } = useLocalSearchParams<{ book: string; chapter: string; verse: string }>();
@@ -27,6 +28,7 @@ export default function LearnScreen() {
   const [isMemorized, setIsMemorized] = useState(false);
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
   const [verseLines, setVerseLines] = useState<string[]>([]);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const splitIntoLines = useCallback((text: string): string[] => {
     const words = text.split(' ');
@@ -212,6 +214,43 @@ export default function LearnScreen() {
     setIsMemorized(!isMemorized);
   };
 
+  const handleTTS = useCallback(async () => {
+    if (!verseData) return;
+    
+    try {
+      if (isSpeaking) {
+        await stopTTS();
+        setIsSpeaking(false);
+      } else {
+        setIsSpeaking(true);
+        await speak(verseData.text, {
+          language: language,
+          speed: ttsSettings.speed,
+          onStart: () => {
+            console.log('[TTS] Started reading verse');
+          },
+          onDone: () => {
+            console.log('[TTS] Finished reading verse');
+            setIsSpeaking(false);
+          },
+          onError: (error) => {
+            console.error('[TTS] Error reading verse:', error);
+            setIsSpeaking(false);
+          },
+        });
+      }
+    } catch (error) {
+      console.error('[TTS] Failed to toggle speech:', error);
+      setIsSpeaking(false);
+    }
+  }, [verseData, language, ttsSettings.speed, isSpeaking]);
+
+  useEffect(() => {
+    return () => {
+      stopTTS();
+    };
+  }, []);
+
   const renderMaskedText = () => {
     if (!verseData) return null;
     
@@ -368,9 +407,22 @@ export default function LearnScreen() {
           )}
           {learningMode === 'guess-verse' ? (
             <>
-              <Text style={[styles.reference, { color: colors.primary }]}>
-                {getBookName(language, verseData.book)} {verseData.chapter}:{verseData.verse}
-              </Text>
+              <View style={styles.referenceRow}>
+                <Text style={[styles.reference, { color: colors.primary }]}>
+                  {getBookName(language, verseData.book)} {verseData.chapter}:{verseData.verse}
+                </Text>
+                <TouchableOpacity
+                  style={[styles.ttsButton, { backgroundColor: isSpeaking ? colors.primary + '20' : colors.cardBackground }]}
+                  onPress={handleTTS}
+                  testID="tts-button"
+                >
+                  {isSpeaking ? (
+                    <VolumeX color={colors.primary} size={20} />
+                  ) : (
+                    <Volume2 color={colors.primary} size={20} />
+                  )}
+                </TouchableOpacity>
+              </View>
               {renderMaskedText()}
               {learningSettings.showHints && (
               <View style={[styles.hintContainer, { borderTopColor: colors.border }]}>
@@ -389,17 +441,30 @@ export default function LearnScreen() {
             </>
           ) : (
             <>
-              <Text style={[
-                styles.verseText, 
-                { 
-                  color: colors.text,
-                  fontSize: dyslexiaSettings.enabled ? dyslexiaSettings.fontSize : appearanceSettings.fontSize,
-                  lineHeight: dyslexiaSettings.lineHeight,
-                  letterSpacing: dyslexiaSettings.wordSpacing,
-                }
-              ]}>
-                {verseData.text}
-              </Text>
+              <View style={styles.verseWithTTS}>
+                <Text style={[
+                  styles.verseText, 
+                  { 
+                    color: colors.text,
+                    fontSize: dyslexiaSettings.enabled ? dyslexiaSettings.fontSize : appearanceSettings.fontSize,
+                    lineHeight: dyslexiaSettings.lineHeight,
+                    letterSpacing: dyslexiaSettings.wordSpacing,
+                  }
+                ]}>
+                  {verseData.text}
+                </Text>
+                <TouchableOpacity
+                  style={[styles.ttsButtonInline, { backgroundColor: isSpeaking ? colors.primary + '20' : colors.background }]}
+                  onPress={handleTTS}
+                  testID="tts-button-inline"
+                >
+                  {isSpeaking ? (
+                    <VolumeX color={colors.primary} size={20} />
+                  ) : (
+                    <Volume2 color={colors.primary} size={20} />
+                  )}
+                </TouchableOpacity>
+              </View>
             </>
           )}
         </View>
@@ -521,10 +586,30 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
+  referenceRow: {
+    flexDirection: "row" as const,
+    justifyContent: "space-between" as const,
+    alignItems: "center" as const,
+    marginBottom: 16,
+  },
   reference: {
     fontSize: 18,
     fontWeight: "700" as const,
-    marginBottom: 16,
+    flex: 1,
+  },
+  ttsButton: {
+    padding: 8,
+    borderRadius: 8,
+    marginLeft: 12,
+  },
+  verseWithTTS: {
+    gap: 12,
+  },
+  ttsButtonInline: {
+    alignSelf: "flex-start" as const,
+    padding: 8,
+    borderRadius: 8,
+    marginTop: 8,
   },
   maskedTextContainer: {
     flexDirection: "row",

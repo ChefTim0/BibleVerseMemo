@@ -1,7 +1,7 @@
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
-import type { Language, LearningMode, VerseProgress, Theme, DyslexiaSettings, LineByLineSettings, AppearanceSettings, LearningSettings } from '../types/database';
+import type { Language, LearningMode, VerseProgress, Theme, DyslexiaSettings, LineByLineSettings, AppearanceSettings, LearningSettings, TTSSettings } from '../types/database';
 
 interface AppState {
   language: Language;
@@ -13,6 +13,7 @@ interface AppState {
   lineByLineSettings: LineByLineSettings;
   appearanceSettings: AppearanceSettings;
   learningSettings: LearningSettings;
+  ttsSettings: TTSSettings;
   setLanguage: (language: Language) => Promise<void>;
   setLearningMode: (mode: LearningMode) => Promise<void>;
   setTheme: (theme: Theme) => Promise<void>;
@@ -20,6 +21,7 @@ interface AppState {
   setLineByLineSettings: (settings: Partial<LineByLineSettings>) => Promise<void>;
   setAppearanceSettings: (settings: Partial<AppearanceSettings>) => Promise<void>;
   setLearningSettings: (settings: Partial<LearningSettings>) => Promise<void>;
+  setTTSSettings: (settings: Partial<TTSSettings>) => Promise<void>;
   getVerseProgress: (book: string, chapter: number, verse: number) => VerseProgress | undefined;
   updateProgress: (progress: VerseProgress) => Promise<void>;
   resetVerseProgress: (book: string, chapter: number, verse: number) => Promise<void>;
@@ -35,6 +37,7 @@ const DYSLEXIA_KEY = '@dyslexia_settings';
 const LINE_BY_LINE_KEY = '@line_by_line_settings';
 const APPEARANCE_KEY = '@appearance_settings';
 const LEARNING_SETTINGS_KEY = '@learning_settings';
+const TTS_SETTINGS_KEY = '@tts_settings';
 
 function getUILanguage(bibleVersion: Language): string {
   const mapping: Record<string, string> = {
@@ -89,6 +92,9 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
     autoMarkThreshold: 5,
     hapticFeedback: true,
   });
+  const [ttsSettings, setTTSSettingsState] = useState<TTSSettings>({
+    speed: 'normal',
+  });
   const [isLoading, setIsLoading] = useState(true);
   
   const uiLanguage = getUILanguage(language);
@@ -101,7 +107,7 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
 
   const loadSettings = async () => {
     try {
-      const [savedLanguage, savedMode, savedTheme, savedProgress, savedDyslexia, savedLineByLine, savedAppearance, savedLearning] = await Promise.all([
+      const [savedLanguage, savedMode, savedTheme, savedProgress, savedDyslexia, savedLineByLine, savedAppearance, savedLearning, savedTTS] = await Promise.all([
         AsyncStorage.getItem(LANGUAGE_KEY),
         AsyncStorage.getItem(LEARNING_MODE_KEY),
         AsyncStorage.getItem(THEME_KEY),
@@ -110,6 +116,7 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
         AsyncStorage.getItem(LINE_BY_LINE_KEY),
         AsyncStorage.getItem(APPEARANCE_KEY),
         AsyncStorage.getItem(LEARNING_SETTINGS_KEY),
+        AsyncStorage.getItem(TTS_SETTINGS_KEY),
       ]);
 
       if (savedLanguage) setLanguageState(savedLanguage as Language);
@@ -120,6 +127,7 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
       if (savedLineByLine) setLineByLineSettingsState(JSON.parse(savedLineByLine));
       if (savedAppearance) setAppearanceSettingsState(JSON.parse(savedAppearance));
       if (savedLearning) setLearningSettingsState(JSON.parse(savedLearning));
+      if (savedTTS) setTTSSettingsState(JSON.parse(savedTTS));
     } catch (error) {
       console.error('Error loading settings:', error);
     } finally {
@@ -166,6 +174,12 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
     const newSettings = { ...learningSettings, ...settings };
     setLearningSettingsState(newSettings);
     await AsyncStorage.setItem(LEARNING_SETTINGS_KEY, JSON.stringify(newSettings));
+  };
+
+  const setTTSSettings = async (settings: Partial<TTSSettings>) => {
+    const newSettings = { ...ttsSettings, ...settings };
+    setTTSSettingsState(newSettings);
+    await AsyncStorage.setItem(TTS_SETTINGS_KEY, JSON.stringify(newSettings));
   };
 
   const getVerseProgress = (book: string, chapter: number, verse: number) => {
@@ -234,6 +248,7 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
     lineByLineSettings,
     appearanceSettings,
     learningSettings,
+    ttsSettings,
     setLanguage,
     setLearningMode,
     setTheme,
@@ -241,6 +256,7 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
     setLineByLineSettings,
     setAppearanceSettings,
     setLearningSettings,
+    setTTSSettings,
     getVerseProgress,
     updateProgress,
     resetVerseProgress,

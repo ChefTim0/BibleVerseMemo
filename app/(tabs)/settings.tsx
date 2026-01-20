@@ -1,11 +1,11 @@
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Linking, Switch, Alert, Platform, Modal } from "react-native";
 import Slider from '@react-native-community/slider';
 import { Picker } from '@react-native-picker/picker';
-import { Check, Heart, BookOpen, Sun, Moon, Brain, Download, Upload, RefreshCcw, Palette, Zap, Folder, Info, X } from "lucide-react-native";
+import { Check, Heart, BookOpen, Sun, Moon, Brain, Download, Upload, RefreshCcw, Palette, Zap, Folder, Info, X, Volume2 } from "lucide-react-native";
 import { useApp } from "../../contexts/AppContext";
 import { t } from "../../constants/translations";
 import { getColors } from "../../constants/colors";
-import type { LearningMode, Theme, Language } from "../../types/database";
+import type { LearningMode, Theme, Language, TTSSpeed } from "../../types/database";
 import { File, Paths } from 'expo-file-system';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Sharing from 'expo-sharing';
@@ -35,7 +35,7 @@ const LANGUAGES: { code: Language; name: string; flag: string }[] = [
 ];
 
 export default function SettingsScreen() {
-  const { language, uiLanguage, learningMode, theme, dyslexiaSettings, lineByLineSettings, appearanceSettings, learningSettings, progress, setLanguage, setLearningMode, setTheme, setDyslexiaSettings, setLineByLineSettings, setAppearanceSettings, setLearningSettings } = useApp();
+  const { language, uiLanguage, learningMode, theme, dyslexiaSettings, lineByLineSettings, appearanceSettings, learningSettings, ttsSettings, progress, setLanguage, setLearningMode, setTheme, setDyslexiaSettings, setLineByLineSettings, setAppearanceSettings, setLearningSettings, setTTSSettings } = useApp();
   const colors = getColors(theme);
   const [showAboutModal, setShowAboutModal] = React.useState(false);
 
@@ -159,11 +159,16 @@ export default function SettingsScreen() {
             await setLineByLineSettings({ enabled: false, wordsPerLine: 5 });
             await setAppearanceSettings({ fontSize: 16, animationsEnabled: true });
             await setLearningSettings({ autoAdvance: false, showHints: true, maxHints: 10, autoMarkMemorized: false, autoMarkThreshold: 5, hapticFeedback: true });
+            await setTTSSettings({ speed: 'normal' });
             Alert.alert(t(uiLanguage, 'success'), t(uiLanguage, 'settingsReset'));
           },
         },
       ]
     );
+  };
+
+  const handleTTSSpeedChange = async (speed: TTSSpeed) => {
+    await setTTSSettings({ speed });
   };
 
   const handleImportProgression = async () => {
@@ -482,6 +487,48 @@ export default function SettingsScreen() {
               trackColor={{ false: colors.border, true: colors.primary + '80' }}
               thumbColor={appearanceSettings.animationsEnabled ? colors.primary : colors.textTertiary}
             />
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            <Volume2 color={colors.info} size={20} /> {t(uiLanguage, 'ttsSettings')}
+          </Text>
+          
+          <Text style={[styles.sliderLabel, { color: colors.text, marginBottom: 8, paddingHorizontal: 4 }]}>
+            {t(uiLanguage, 'ttsSpeed')}
+          </Text>
+          
+          <View style={styles.ttsSpeedContainer}>
+            <TouchableOpacity
+              style={[styles.ttsSpeedOption, { backgroundColor: ttsSettings.speed === 'slow' ? colors.primary + '20' : colors.cardBackground, borderColor: ttsSettings.speed === 'slow' ? colors.primary : colors.border }]}
+              onPress={() => handleTTSSpeedChange('slow')}
+            >
+              <Text style={[styles.ttsSpeedText, { color: ttsSettings.speed === 'slow' ? colors.primary : colors.text }]}>
+                {t(uiLanguage, 'ttsSlow')}
+              </Text>
+              {ttsSettings.speed === 'slow' && <Check color={colors.primary} size={16} />}
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.ttsSpeedOption, { backgroundColor: ttsSettings.speed === 'normal' ? colors.primary + '20' : colors.cardBackground, borderColor: ttsSettings.speed === 'normal' ? colors.primary : colors.border }]}
+              onPress={() => handleTTSSpeedChange('normal')}
+            >
+              <Text style={[styles.ttsSpeedText, { color: ttsSettings.speed === 'normal' ? colors.primary : colors.text }]}>
+                {t(uiLanguage, 'ttsNormal')}
+              </Text>
+              {ttsSettings.speed === 'normal' && <Check color={colors.primary} size={16} />}
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.ttsSpeedOption, { backgroundColor: ttsSettings.speed === 'fast' ? colors.primary + '20' : colors.cardBackground, borderColor: ttsSettings.speed === 'fast' ? colors.primary : colors.border }]}
+              onPress={() => handleTTSSpeedChange('fast')}
+            >
+              <Text style={[styles.ttsSpeedText, { color: ttsSettings.speed === 'fast' ? colors.primary : colors.text }]}>
+                {t(uiLanguage, 'ttsFast')}
+              </Text>
+              {ttsSettings.speed === 'fast' && <Check color={colors.primary} size={16} />}
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -963,5 +1010,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500" as const,
     marginLeft: 16,
+  },
+  ttsSpeedContainer: {
+    flexDirection: "row" as const,
+    gap: 8,
+    marginBottom: 12,
+  },
+  ttsSpeedOption: {
+    flex: 1,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: 6,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 2,
+  },
+  ttsSpeedText: {
+    fontSize: 14,
+    fontWeight: "600" as const,
   },
 });
