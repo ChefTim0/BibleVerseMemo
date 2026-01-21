@@ -3,7 +3,7 @@ import { useRouter } from "expo-router";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Shuffle, RefreshCw, X, BookOpen } from "lucide-react-native";
 import { useApp } from "../../contexts/AppContext";
-import { getBooks, getRandomVerse, getBookName, getRandomNewTestamentVerse } from "../../utils/database";
+import { getBooks, getRandomVerse, getBookName, getRandomNewTestamentVerse, getRandomOldTestamentVerse } from "../../utils/database";
 import { t } from "../../constants/translations";
 import { getColors } from "../../constants/colors";
 import type { Verse } from "../../types/database";
@@ -23,8 +23,10 @@ export default function BooksScreen() {
   const [dailyVerse, setDailyVerse] = useState<Verse | null>(null);
   const [dailyVerseBookName, setDailyVerseBookName] = useState<string>('');
   const [showDailyVerse, setShowDailyVerse] = useState(false);
+  const [showTestamentPicker, setShowTestamentPicker] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const pickerFadeAnim = useRef(new Animated.Value(0)).current;
 
 
   const loadBooks = useCallback(async () => {
@@ -127,9 +129,31 @@ export default function BooksScreen() {
     router.push({ pathname: '/book/[book]', params: { book } });
   };
 
-  const handleRandomVerse = async () => {
+  const openTestamentPicker = () => {
+    setShowTestamentPicker(true);
+    Animated.timing(pickerFadeAnim, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const closeTestamentPicker = () => {
+    Animated.timing(pickerFadeAnim, {
+      toValue: 0,
+      duration: 150,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowTestamentPicker(false);
+    });
+  };
+
+  const handleRandomVerseFromTestament = async (testament: 'old' | 'new') => {
+    closeTestamentPicker();
     try {
-      const verse = await getRandomVerse(language);
+      const verse = testament === 'old' 
+        ? await getRandomOldTestamentVerse(language)
+        : await getRandomNewTestamentVerse(language);
       if (verse) {
         router.push({ 
           pathname: '/learn/[book]/[chapter]/[verse]', 
@@ -193,7 +217,7 @@ export default function BooksScreen() {
           </View>
           <TouchableOpacity
             style={[styles.randomButton, { backgroundColor: colors.primary }]}
-            onPress={handleRandomVerse}
+            onPress={openTestamentPicker}
             activeOpacity={0.7}
           >
             <Shuffle color="#FFFFFF" size={20} />
@@ -242,7 +266,7 @@ export default function BooksScreen() {
                 <BookOpen color={colors.primary} size={24} />
               </View>
               <Text style={[styles.modalTitle, { color: colors.text }]}>
-                {t(uiLanguage, 'dailyVerse')}
+                {t(uiLanguage, 'randomVerse')}
               </Text>
               <TouchableOpacity
                 style={[styles.closeButton, { backgroundColor: colors.background }]}
@@ -285,6 +309,58 @@ export default function BooksScreen() {
                 </Text>
               </TouchableOpacity>
             </View>
+          </Animated.View>
+        </Animated.View>
+      </Modal>
+
+      <Modal
+        visible={showTestamentPicker}
+        transparent
+        animationType="none"
+        onRequestClose={closeTestamentPicker}
+      >
+        <Animated.View style={[styles.modalOverlay, { opacity: pickerFadeAnim }]}>
+          <TouchableOpacity
+            style={styles.modalBackdrop}
+            activeOpacity={1}
+            onPress={closeTestamentPicker}
+          />
+          <Animated.View
+            style={[
+              styles.pickerContent,
+              { backgroundColor: colors.cardBackground },
+            ]}
+          >
+            <Text style={[styles.pickerTitle, { color: colors.text }]}>
+              {t(uiLanguage, 'chooseTestament')}
+            </Text>
+            <TouchableOpacity
+              style={[styles.testamentOption, { backgroundColor: colors.primary + '15', borderColor: colors.primary }]}
+              onPress={() => handleRandomVerseFromTestament('old')}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.testamentOptionText, { color: colors.primary }]}>
+                {t(uiLanguage, 'oldTestament')}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.testamentOption, { backgroundColor: colors.primary + '15', borderColor: colors.primary }]}
+              onPress={() => handleRandomVerseFromTestament('new')}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.testamentOptionText, { color: colors.primary }]}>
+                {t(uiLanguage, 'newTestament')}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.cancelButton, { borderColor: colors.border }]}
+              onPress={closeTestamentPicker}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.cancelButtonText, { color: colors.textSecondary }]}>
+                {t(uiLanguage, 'cancel')}
+              </Text>
+            </TouchableOpacity>
           </Animated.View>
         </Animated.View>
       </Modal>
@@ -475,6 +551,46 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600' as const,
+  },
+  pickerContent: {
+    width: '85%',
+    maxWidth: 340,
+    borderRadius: 20,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  pickerTitle: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    textAlign: 'center' as const,
+    marginBottom: 20,
+  },
+  testamentOption: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    marginBottom: 12,
+    alignItems: 'center' as const,
+  },
+  testamentOptionText: {
+    fontSize: 17,
+    fontWeight: '600' as const,
+  },
+  cancelButton: {
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    alignItems: 'center' as const,
+    marginTop: 4,
+  },
+  cancelButtonText: {
     fontSize: 16,
     fontWeight: '600' as const,
   },

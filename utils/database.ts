@@ -327,3 +327,28 @@ export async function getRandomNewTestamentVerse(lang: Language): Promise<Verse 
   const randomVerse = verses[Math.floor(Math.random() * verses.length)];
   return randomVerse;
 }
+
+export async function getRandomOldTestamentVerse(lang: Language): Promise<Verse | null> {
+  const books = await fetchBooks(lang);
+  
+  const otBooks = books.filter(b => !isNewTestamentBook(b.book));
+  
+  if (otBooks.length === 0) {
+    console.log('[Database] No OT books found, falling back to all books');
+    return getRandomVerse(lang);
+  }
+  
+  console.log('[Database] OT books found:', otBooks.map(b => b.book).join(', '));
+  
+  const randomBook = otBooks[Math.floor(Math.random() * otBooks.length)];
+  const randomChapter = Math.floor(Math.random() * randomBook.chapters) + 1;
+  
+  const verses = await fetchVerses(lang, randomBook.book, randomChapter);
+  
+  if (verses.length === 0) {
+    return null;
+  }
+  
+  const randomVerse = verses[Math.floor(Math.random() * verses.length)];
+  return randomVerse;
+}
