@@ -44,17 +44,11 @@ export default function SettingsScreen() {
   const [testingVoice, setTestingVoice] = useState<string | null>(null);
 
   const loadVoices = useCallback(async () => {
-    setLoadingVoices(true);
-    try {
-      const langCode = getLanguageCode(language);
-      const voices = await getVoicesForLanguage(langCode);
-      setAvailableVoices(voices);
-      console.log('[Settings] Loaded voices for', langCode, ':', voices.length);
-    } catch (error) {
-      console.error('[Settings] Failed to load voices:', error);
-    } finally {
-      setLoadingVoices(false);
-    }
+    const langCode = getLanguageCode(language);
+    const voices = await getVoicesForLanguage(langCode);
+    setAvailableVoices(voices);
+    setLoadingVoices(false);
+    console.log('[Settings] Loaded voices for', langCode, ':', voices.length);
   }, [language]);
 
   useEffect(() => {
