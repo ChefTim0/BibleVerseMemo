@@ -143,10 +143,39 @@ function getBuiltInVoicesForLanguage(languageCode: string): TTSVoice[] {
 
 export async function getVoicesForLanguage(languageCode: string): Promise<TTSVoice[]> {
   const langPrefix = languageCode.split('-')[0].toLowerCase();
+  
+  try {
+    const systemVoices = await Speech.getAvailableVoicesAsync();
+    console.log('[TTS] System voices count:', systemVoices.length);
+    
+    const filteredVoices = systemVoices
+      .filter(v => {
+        if (!v.identifier || !v.language) return false;
+        const voiceLang = v.language.toLowerCase();
+        return voiceLang.startsWith(langPrefix) || voiceLang.includes(langPrefix);
+      })
+      .map((v, index) => {
+        const displayName = v.name || v.identifier || `Voice ${index + 1}`;
+        const gender = detectGender(displayName, v.identifier);
+        return {
+          identifier: v.identifier,
+          name: displayName,
+          language: v.language,
+          gender,
+        };
+      });
+    
+    console.log('[TTS] Filtered voices for', languageCode, ':', filteredVoices.length);
+    
+    if (filteredVoices.length > 0) {
+      return filteredVoices;
+    }
+  } catch (error) {
+    console.error('[TTS] Failed to get system voices:', error);
+  }
+  
   const builtInVoices = getBuiltInVoicesForLanguage(languageCode);
-  
-  console.log('[TTS] Built-in voices for', languageCode, ':', builtInVoices.length);
-  
+  console.log('[TTS] Falling back to built-in voices:', builtInVoices.length);
   return builtInVoices;
 }
 
@@ -208,8 +237,10 @@ export async function speak(
       },
     };
 
-    if (options.voiceIdentifier && Platform.OS !== 'web' && !isBuiltInVoice(options.voiceIdentifier)) {
-      speechOptions.voice = options.voiceIdentifier;
+    if (options.voiceIdentifier && Platform.OS !== 'web') {
+      if (!isBuiltInVoice(options.voiceIdentifier)) {
+        speechOptions.voice = options.voiceIdentifier;
+      }
     }
 
     Speech.speak(text, speechOptions);
