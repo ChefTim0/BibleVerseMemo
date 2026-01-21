@@ -200,7 +200,7 @@ export default function SettingsScreen() {
           onPress: async () => {
             await setDyslexiaSettings({ enabled: false, fontSize: 18, lineHeight: 32, wordSpacing: 0, validationTolerance: 0.8 });
             await setLineByLineSettings({ enabled: false, wordsPerLine: 5 });
-            await setAppearanceSettings({ fontSize: 16, animationsEnabled: true });
+            await setAppearanceSettings({ fontSize: 16, animationsEnabled: true, showStartupVerse: true });
             await setLearningSettings({ autoAdvance: false, showHints: true, maxHints: 10, autoMarkMemorized: false, autoMarkThreshold: 5, hapticFeedback: true });
             await setTTSSettings({ speed: 'normal', voiceIdentifier: undefined });
             Alert.alert(t(uiLanguage, 'success'), t(uiLanguage, 'settingsReset'));
@@ -534,6 +534,18 @@ export default function SettingsScreen() {
               onValueChange={(value) => setAppearanceSettings({ animationsEnabled: value })}
               trackColor={{ false: colors.border, true: colors.primary + '80' }}
               thumbColor={appearanceSettings.animationsEnabled ? colors.primary : colors.textTertiary}
+            />
+          </View>
+
+          <View style={[styles.option, { backgroundColor: colors.cardBackground }]}>
+            <View style={styles.themeOption}>
+              <Text style={[styles.optionText, { color: colors.text }]}>{t(uiLanguage, 'showStartupVerse')}</Text>
+            </View>
+            <Switch
+              value={appearanceSettings.showStartupVerse !== false}
+              onValueChange={(value) => setAppearanceSettings({ showStartupVerse: value })}
+              trackColor={{ false: colors.border, true: colors.primary + '80' }}
+              thumbColor={appearanceSettings.showStartupVerse !== false ? colors.primary : colors.textTertiary}
             />
           </View>
         </View>

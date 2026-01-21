@@ -83,6 +83,7 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
   const [appearanceSettings, setAppearanceSettingsState] = useState<AppearanceSettings>({
     fontSize: 16,
     animationsEnabled: true,
+    showStartupVerse: true,
   });
   const [learningSettings, setLearningSettingsState] = useState<LearningSettings>({
     autoAdvance: false,

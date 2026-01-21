@@ -48,6 +48,7 @@ export interface LineByLineSettings {
 export interface AppearanceSettings {
   fontSize: number;
   animationsEnabled: boolean;
+  showStartupVerse: boolean;
 }
 
 export interface LearningSettings {

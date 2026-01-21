@@ -12,7 +12,7 @@ import type { Verse } from "../../types/database";
 
 
 export default function BooksScreen() {
-  const { language, uiLanguage, theme } = useApp();
+  const { language, uiLanguage, theme, appearanceSettings } = useApp();
   const colors = getColors(theme);
   const router = useRouter();
   const [books, setBooks] = useState<string[]>([]);
@@ -61,6 +61,10 @@ export default function BooksScreen() {
 
   useEffect(() => {
     const loadDailyVerse = async () => {
+      if (appearanceSettings.showStartupVerse === false) {
+        console.log('[BooksScreen] Startup verse disabled in settings');
+        return;
+      }
       try {
         console.log('[BooksScreen] Loading daily NT verse...');
         const verse = await getRandomNewTestamentVerse(language);
@@ -89,7 +93,7 @@ export default function BooksScreen() {
       }
     };
     loadDailyVerse();
-  }, [language]);
+  }, [language, appearanceSettings.showStartupVerse]);
 
   const closeDailyVerse = () => {
     Animated.parallel([
