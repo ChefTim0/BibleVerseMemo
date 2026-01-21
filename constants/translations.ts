@@ -139,6 +139,9 @@ export const translations: Record<Language, Record<string, string>> = {
     ttsLoadingVoices: 'Loading voices...',
     ttsNoVoices: 'No voices available for this language',
     ttsVoiceInfo: 'Available voices depend on your device. Tap the play button to test a voice.',
+    dailyVerse: 'Verse of the Day',
+    close: 'Close',
+    learnThisVerse: 'Learn this verse',
   },
   fr: {
     books: 'Livres',
@@ -278,6 +281,9 @@ export const translations: Record<Language, Record<string, string>> = {
     ttsLoadingVoices: 'Chargement des voix...',
     ttsNoVoices: 'Aucune voix disponible pour cette langue',
     ttsVoiceInfo: 'Les voix disponibles dépendent de votre appareil. Appuyez sur le bouton lecture pour tester une voix.',
+    dailyVerse: 'Verset du jour',
+    close: 'Fermer',
+    learnThisVerse: 'Apprendre ce verset',
   },
   'fr-fob': {
     books: 'Livres',

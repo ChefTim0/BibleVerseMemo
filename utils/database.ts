@@ -274,3 +274,56 @@ export async function getBookName(lang: Language, book: string): Promise<string>
   const bookData = books.find(b => b.book === book);
   return bookData?.bookName || book;
 }
+
+const NEW_TESTAMENT_PATTERNS = [
+  'matt', 'matth', 'matthieu', 'mateo', 'matteo',
+  'marc', 'mark', 'marcos', 'marco',
+  'luc', 'luke', 'lucas', 'luca',
+  'jean', 'john', 'juan', 'giovanni', 'joh',
+  'act', 'actes', 'hechos', 'atti',
+  'rom', 'romains', 'romanos', 'romani',
+  'cor', 'corinth', 'corintios', 'corinzi',
+  'gal', 'galat',
+  'eph', 'ephes', 'efes',
+  'phil', 'philip', 'filipenses', 'filippesi',
+  'col', 'coloss',
+  'thess', 'tesal', 'tessalon',
+  'tim', 'timoth', 'timoteo',
+  'tit', 'tite', 'tito',
+  'philem', 'filem',
+  'heb', 'hebr', 'hebreux', 'ebrei',
+  'jacq', 'jam', 'james', 'santiago', 'giacomo',
+  'pier', 'pet', 'pedro', 'pietro',
+  'jude', 'judas', 'giuda',
+  'apoc', 'rev', 'revel', 'apocal', 'apocalypse',
+];
+
+function isNewTestamentBook(bookId: string): boolean {
+  const normalized = bookId.toLowerCase();
+  return NEW_TESTAMENT_PATTERNS.some(pattern => normalized.includes(pattern));
+}
+
+export async function getRandomNewTestamentVerse(lang: Language): Promise<Verse | null> {
+  const books = await fetchBooks(lang);
+  
+  const ntBooks = books.filter(b => isNewTestamentBook(b.book));
+  
+  if (ntBooks.length === 0) {
+    console.log('[Database] No NT books found, falling back to all books');
+    return getRandomVerse(lang);
+  }
+  
+  console.log('[Database] NT books found:', ntBooks.map(b => b.book).join(', '));
+  
+  const randomBook = ntBooks[Math.floor(Math.random() * ntBooks.length)];
+  const randomChapter = Math.floor(Math.random() * randomBook.chapters) + 1;
+  
+  const verses = await fetchVerses(lang, randomBook.book, randomChapter);
+  
+  if (verses.length === 0) {
+    return null;
+  }
+  
+  const randomVerse = verses[Math.floor(Math.random() * verses.length)];
+  return randomVerse;
+}
