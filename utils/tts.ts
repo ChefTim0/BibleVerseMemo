@@ -2,32 +2,7 @@ import * as Speech from 'expo-speech';
 import { Platform } from 'react-native';
 import type { TTSVoice } from '../types/database';
 
-const BUILT_IN_VOICES: TTSVoice[] = [
-  // French
-  { identifier: 'fr-FR-female', name: 'Voix française (Femme)', language: 'fr-FR', gender: 'female' },
-  { identifier: 'fr-FR-male', name: 'Voix française (Homme)', language: 'fr-FR', gender: 'male' },
-  // English
-  { identifier: 'en-US-female', name: 'English Voice (Female)', language: 'en-US', gender: 'female' },
-  { identifier: 'en-US-male', name: 'English Voice (Male)', language: 'en-US', gender: 'male' },
-  // Spanish
-  { identifier: 'es-ES-female', name: 'Voz española (Mujer)', language: 'es-ES', gender: 'female' },
-  { identifier: 'es-ES-male', name: 'Voz española (Hombre)', language: 'es-ES', gender: 'male' },
-  // German
-  { identifier: 'de-DE-female', name: 'Deutsche Stimme (Frau)', language: 'de-DE', gender: 'female' },
-  { identifier: 'de-DE-male', name: 'Deutsche Stimme (Mann)', language: 'de-DE', gender: 'male' },
-  // Italian
-  { identifier: 'it-IT-female', name: 'Voce italiana (Donna)', language: 'it-IT', gender: 'female' },
-  { identifier: 'it-IT-male', name: 'Voce italiana (Uomo)', language: 'it-IT', gender: 'male' },
-  // Greek
-  { identifier: 'el-GR-female', name: 'Ελληνική φωνή (Γυναίκα)', language: 'el-GR', gender: 'female' },
-  { identifier: 'el-GR-male', name: 'Ελληνική φωνή (Άνδρας)', language: 'el-GR', gender: 'male' },
-  // Hebrew
-  { identifier: 'he-IL-female', name: 'קול עברי (אישה)', language: 'he-IL', gender: 'female' },
-  { identifier: 'he-IL-male', name: 'קול עברי (גבר)', language: 'he-IL', gender: 'male' },
-  // Latin (fallback to Italian)
-  { identifier: 'la-VA-female', name: 'Vox Latina (Femina)', language: 'la', gender: 'female' },
-  { identifier: 'la-VA-male', name: 'Vox Latina (Vir)', language: 'la', gender: 'male' },
-];
+
 
 export type TTSSpeed = 'slow' | 'normal' | 'fast';
 
@@ -80,11 +55,11 @@ function detectGender(voiceName: string, identifier: string): 'male' | 'female' 
     'zira', 'hazel', 'susan', 'linda', 'catherine', 'alice', 'elena', 'monica', 'lucia', 'paulina',
     'sabina', 'helena', 'ioana', 'carmit', 'milena', 'tessa', 'melina', 'yelda', 'damayanti',
     'lekha', 'mariska', 'ting-ting', 'sin-ji', 'mei-jia', 'kyoko', 'yuna', 'zosia',
-    'virginie', 'celine', 'audrey', 'amelie', 'claire', 'denise', 'renee', 'genevieve', 'marguerite',
+    'virginie', 'celine', 'audrey', 'claire', 'denise', 'renee', 'genevieve', 'marguerite',
     'nathalie', 'sylvie', 'veronique', 'sophie', 'isabelle', 'camille', 'lea', 'emma', 'chloe',
     'aurelie', 'juliette', 'charlotte', 'manon', 'sarah', 'laura', 'marine', 'oceane', 'mathilde',
-    'victoria', 'elizabeth', 'emily', 'emma', 'olivia', 'ava', 'sophia', 'isabella', 'mia', 'abigail',
-    'harper', 'evelyn', 'aria', 'scarlett', 'grace', 'chloe', 'penelope', 'riley', 'layla', 'zoey'];
+    'victoria', 'elizabeth', 'emily', 'olivia', 'ava', 'sophia', 'isabella', 'mia', 'abigail',
+    'harper', 'evelyn', 'aria', 'scarlett', 'grace', 'penelope', 'riley', 'layla', 'zoey'];
   
   const maleIndicators = ['male', 'man', 'boy', 'masculine',
     'paul', 'thomas', 'david', 'daniel', 'mark', 'james', 'george', 'alex', 'luca', 'jorge',
@@ -133,13 +108,7 @@ export async function getAvailableVoices(): Promise<TTSVoice[]> {
   }
 }
 
-function getBuiltInVoicesForLanguage(languageCode: string): TTSVoice[] {
-  const langPrefix = languageCode.split('-')[0].toLowerCase();
-  return BUILT_IN_VOICES.filter(v => {
-    const voiceLang = v.language.toLowerCase();
-    return voiceLang.startsWith(langPrefix) || voiceLang.includes(langPrefix);
-  });
-}
+
 
 export async function getVoicesForLanguage(languageCode: string): Promise<TTSVoice[]> {
   const langPrefix = languageCode.split('-')[0].toLowerCase();
@@ -166,22 +135,14 @@ export async function getVoicesForLanguage(languageCode: string): Promise<TTSVoi
       });
     
     console.log('[TTS] Filtered voices for', languageCode, ':', filteredVoices.length);
-    
-    if (filteredVoices.length > 0) {
-      return filteredVoices;
-    }
+    return filteredVoices;
   } catch (error) {
     console.error('[TTS] Failed to get system voices:', error);
+    return [];
   }
-  
-  const builtInVoices = getBuiltInVoicesForLanguage(languageCode);
-  console.log('[TTS] Falling back to built-in voices:', builtInVoices.length);
-  return builtInVoices;
 }
 
-export function isBuiltInVoice(identifier: string): boolean {
-  return BUILT_IN_VOICES.some(v => v.identifier === identifier);
-}
+
 
 export function getSpeedValue(speed: TTSSpeed): number {
   return SPEED_VALUES[speed];
@@ -238,9 +199,7 @@ export async function speak(
     };
 
     if (options.voiceIdentifier && Platform.OS !== 'web') {
-      if (!isBuiltInVoice(options.voiceIdentifier)) {
-        speechOptions.voice = options.voiceIdentifier;
-      }
+      speechOptions.voice = options.voiceIdentifier;
     }
 
     Speech.speak(text, speechOptions);
