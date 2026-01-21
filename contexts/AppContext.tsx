@@ -89,7 +89,7 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
     autoAdvance: false,
     showHints: true,
     maxHints: 10,
-    autoMarkMemorized: false,
+    autoMarkMemorized: true,
     autoMarkThreshold: 5,
     hapticFeedback: true,
   });
