@@ -2,66 +2,6 @@ import * as Speech from 'expo-speech';
 import { Platform } from 'react-native';
 import type { TTSVoice } from '../types/database';
 
-interface BuiltInVoice {
-  identifier: string;
-  name: string;
-  language: string;
-  gender: 'male' | 'female';
-  platform: 'ios' | 'android' | 'all';
-}
-
-const BUILT_IN_VOICES: BuiltInVoice[] = [
-  // French voices - iOS
-  { identifier: 'com.apple.voice.compact.fr-FR.Thomas', name: 'Thomas', language: 'fr-FR', gender: 'male', platform: 'ios' },
-  { identifier: 'com.apple.voice.compact.fr-FR.Amelie', name: 'Amélie', language: 'fr-FR', gender: 'female', platform: 'ios' },
-  { identifier: 'com.apple.ttsbundle.Thomas-compact', name: 'Thomas (Compact)', language: 'fr-FR', gender: 'male', platform: 'ios' },
-  { identifier: 'com.apple.ttsbundle.Amelie-compact', name: 'Amélie (Compact)', language: 'fr-FR', gender: 'female', platform: 'ios' },
-  { identifier: 'com.apple.voice.enhanced.fr-FR.Thomas', name: 'Thomas (Enhanced)', language: 'fr-FR', gender: 'male', platform: 'ios' },
-  { identifier: 'com.apple.voice.enhanced.fr-FR.Amelie', name: 'Amélie (Enhanced)', language: 'fr-FR', gender: 'female', platform: 'ios' },
-  // French voices - Android
-  { identifier: 'fr-fr-x-vlf#male_1-local', name: 'Français Homme 1', language: 'fr-FR', gender: 'male', platform: 'android' },
-  { identifier: 'fr-fr-x-vlf#female_1-local', name: 'Français Femme 1', language: 'fr-FR', gender: 'female', platform: 'android' },
-  { identifier: 'fr-FR-language', name: 'Français Standard', language: 'fr-FR', gender: 'female', platform: 'android' },
-  { identifier: 'fr_FR', name: 'Français (FR)', language: 'fr-FR', gender: 'female', platform: 'android' },
-  
-  // English voices - iOS
-  { identifier: 'com.apple.voice.compact.en-US.Samantha', name: 'Samantha', language: 'en-US', gender: 'female', platform: 'ios' },
-  { identifier: 'com.apple.voice.compact.en-GB.Daniel', name: 'Daniel', language: 'en-GB', gender: 'male', platform: 'ios' },
-  { identifier: 'com.apple.ttsbundle.Samantha-compact', name: 'Samantha (Compact)', language: 'en-US', gender: 'female', platform: 'ios' },
-  { identifier: 'com.apple.voice.enhanced.en-US.Samantha', name: 'Samantha (Enhanced)', language: 'en-US', gender: 'female', platform: 'ios' },
-  { identifier: 'com.apple.voice.enhanced.en-GB.Daniel', name: 'Daniel (Enhanced)', language: 'en-GB', gender: 'male', platform: 'ios' },
-  // English voices - Android
-  { identifier: 'en-us-x-sfg#male_1-local', name: 'English Male 1', language: 'en-US', gender: 'male', platform: 'android' },
-  { identifier: 'en-us-x-sfg#female_1-local', name: 'English Female 1', language: 'en-US', gender: 'female', platform: 'android' },
-  { identifier: 'en-US-language', name: 'English US', language: 'en-US', gender: 'female', platform: 'android' },
-  { identifier: 'en_US', name: 'English (US)', language: 'en-US', gender: 'female', platform: 'android' },
-  
-  // Spanish voices - iOS
-  { identifier: 'com.apple.voice.compact.es-ES.Monica', name: 'Monica', language: 'es-ES', gender: 'female', platform: 'ios' },
-  { identifier: 'com.apple.voice.compact.es-ES.Jorge', name: 'Jorge', language: 'es-ES', gender: 'male', platform: 'ios' },
-  { identifier: 'com.apple.voice.enhanced.es-ES.Monica', name: 'Monica (Enhanced)', language: 'es-ES', gender: 'female', platform: 'ios' },
-  // Spanish voices - Android
-  { identifier: 'es-es-x-eef#male_1-local', name: 'Español Hombre', language: 'es-ES', gender: 'male', platform: 'android' },
-  { identifier: 'es-es-x-eef#female_1-local', name: 'Español Mujer', language: 'es-ES', gender: 'female', platform: 'android' },
-  { identifier: 'es_ES', name: 'Español (ES)', language: 'es-ES', gender: 'female', platform: 'android' },
-  
-  // German voices - iOS
-  { identifier: 'com.apple.voice.compact.de-DE.Anna', name: 'Anna', language: 'de-DE', gender: 'female', platform: 'ios' },
-  { identifier: 'com.apple.voice.enhanced.de-DE.Anna', name: 'Anna (Enhanced)', language: 'de-DE', gender: 'female', platform: 'ios' },
-  // German voices - Android
-  { identifier: 'de-de-x-deb#male_1-local', name: 'Deutsch Mann', language: 'de-DE', gender: 'male', platform: 'android' },
-  { identifier: 'de-de-x-deb#female_1-local', name: 'Deutsch Frau', language: 'de-DE', gender: 'female', platform: 'android' },
-  { identifier: 'de_DE', name: 'Deutsch (DE)', language: 'de-DE', gender: 'female', platform: 'android' },
-  
-  // Italian voices - iOS
-  { identifier: 'com.apple.voice.compact.it-IT.Alice', name: 'Alice', language: 'it-IT', gender: 'female', platform: 'ios' },
-  { identifier: 'com.apple.voice.enhanced.it-IT.Alice', name: 'Alice (Enhanced)', language: 'it-IT', gender: 'female', platform: 'ios' },
-  // Italian voices - Android
-  { identifier: 'it-it-x-itb#male_1-local', name: 'Italiano Uomo', language: 'it-IT', gender: 'male', platform: 'android' },
-  { identifier: 'it-it-x-itb#female_1-local', name: 'Italiano Donna', language: 'it-IT', gender: 'female', platform: 'android' },
-  { identifier: 'it_IT', name: 'Italiano (IT)', language: 'it-IT', gender: 'female', platform: 'android' },
-];
-
 
 
 export type TTSSpeed = 'slow' | 'normal' | 'fast';
@@ -170,25 +110,6 @@ export async function getAvailableVoices(): Promise<TTSVoice[]> {
 
 
 
-function getBuiltInVoicesForLanguage(languageCode: string): TTSVoice[] {
-  const langPrefix = languageCode.split('-')[0].toLowerCase();
-  const currentPlatform = Platform.OS === 'ios' ? 'ios' : 'android';
-  
-  return BUILT_IN_VOICES
-    .filter(v => {
-      const voiceLang = v.language.toLowerCase();
-      const matchesLanguage = voiceLang.startsWith(langPrefix) || voiceLang.includes(langPrefix);
-      const matchesPlatform = v.platform === currentPlatform || v.platform === 'all';
-      return matchesLanguage && matchesPlatform;
-    })
-    .map(v => ({
-      identifier: v.identifier,
-      name: `${v.name} (${v.gender === 'male' ? '♂' : '♀'})`,
-      language: v.language,
-      gender: v.gender,
-    }));
-}
-
 export async function getVoicesForLanguage(languageCode: string): Promise<TTSVoice[]> {
   const langPrefix = languageCode.split('-')[0].toLowerCase();
   
@@ -215,24 +136,10 @@ export async function getVoicesForLanguage(languageCode: string): Promise<TTSVoi
     
     console.log('[TTS] Filtered system voices for', languageCode, ':', filteredSystemVoices.length);
     
-    // Get built-in voices for this language
-    const builtInVoices = getBuiltInVoicesForLanguage(languageCode);
-    console.log('[TTS] Built-in voices for', languageCode, ':', builtInVoices.length);
-    
-    // Combine system voices with built-in voices, avoiding duplicates
-    const existingIdentifiers = new Set(filteredSystemVoices.map(v => v.identifier));
-    const uniqueBuiltInVoices = builtInVoices.filter(v => !existingIdentifiers.has(v.identifier));
-    
-    const allVoices = [...filteredSystemVoices, ...uniqueBuiltInVoices];
-    console.log('[TTS] Total voices available:', allVoices.length);
-    
-    return allVoices;
+    return filteredSystemVoices;
   } catch (error) {
     console.error('[TTS] Failed to get system voices:', error);
-    // Return built-in voices as fallback
-    const builtInVoices = getBuiltInVoicesForLanguage(languageCode);
-    console.log('[TTS] Returning built-in voices as fallback:', builtInVoices.length);
-    return builtInVoices;
+    return [];
   }
 }
 
