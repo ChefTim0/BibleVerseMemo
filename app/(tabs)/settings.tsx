@@ -201,7 +201,7 @@ export default function SettingsScreen() {
             await setDyslexiaSettings({ enabled: false, fontSize: 18, lineHeight: 32, wordSpacing: 0, validationTolerance: 0.8 });
             await setLineByLineSettings({ enabled: false, wordsPerLine: 5 });
             await setAppearanceSettings({ fontSize: 16, animationsEnabled: true, showStartupVerse: true });
-            await setLearningSettings({ autoAdvance: false, showHints: true, maxHints: 10, autoMarkMemorized: false, autoMarkThreshold: 5, hapticFeedback: true });
+            await setLearningSettings({ autoAdvance: false, showHints: true, maxHints: 10, autoMarkMemorized: false, autoMarkThreshold: 5, hapticFeedback: true, maxMasteryLevel: 5 });
             await setTTSSettings({ speed: 'normal', voiceIdentifier: undefined });
             Alert.alert(t(uiLanguage, 'success'), t(uiLanguage, 'settingsReset'));
           },
@@ -760,14 +760,14 @@ export default function SettingsScreen() {
           {learningSettings.autoMarkMemorized && (
             <View style={[styles.sliderContainer, { backgroundColor: colors.cardBackground }]}>
               <Text style={[styles.sliderLabel, { color: colors.text }]}>
-                {t(uiLanguage, 'masteryThreshold')}: {learningSettings.autoMarkThreshold}/5
+                {t(uiLanguage, 'masteryThreshold')}: {learningSettings.autoMarkThreshold}/{learningSettings.maxMasteryLevel || 5}
               </Text>
               <Slider
                 style={styles.slider}
                 minimumValue={1}
-                maximumValue={5}
+                maximumValue={learningSettings.maxMasteryLevel || 5}
                 step={1}
-                value={learningSettings.autoMarkThreshold}
+                value={Math.min(learningSettings.autoMarkThreshold, learningSettings.maxMasteryLevel || 5)}
                 onValueChange={(value: number) => setLearningSettings({ autoMarkThreshold: value })}
                 minimumTrackTintColor={colors.primary}
                 maximumTrackTintColor={colors.border}
@@ -789,6 +789,26 @@ export default function SettingsScreen() {
               trackColor={{ false: colors.border, true: colors.primary + '80' }}
               thumbColor={learningSettings.hapticFeedback ? colors.primary : colors.textTertiary}
             />
+          </View>
+
+          <View style={[styles.sliderContainer, { backgroundColor: colors.cardBackground }]}>
+            <Text style={[styles.sliderLabel, { color: colors.text }]}>
+              {t(uiLanguage, 'maxMasteryLevel')}: {learningSettings.maxMasteryLevel || 5}
+            </Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={3}
+              maximumValue={10}
+              step={1}
+              value={learningSettings.maxMasteryLevel || 5}
+              onValueChange={(value: number) => setLearningSettings({ maxMasteryLevel: value })}
+              minimumTrackTintColor={colors.primary}
+              maximumTrackTintColor={colors.border}
+              thumbTintColor={colors.primary}
+            />
+            <Text style={[styles.sliderDescription, { color: colors.textSecondary }]}>
+              {t(uiLanguage, 'maxMasteryLevelDesc')}
+            </Text>
           </View>
         </View>
 

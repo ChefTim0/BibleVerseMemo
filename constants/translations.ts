@@ -146,6 +146,9 @@ export const translations: Record<Language, Record<string, string>> = {
     oldTestament: 'Old Testament',
     newTestament: 'New Testament',
     chooseTestament: 'Choose Testament',
+    allBooks: 'All',
+    maxMasteryLevel: 'Maximum Mastery Level',
+    maxMasteryLevelDesc: 'Number of successful attempts required to fully master a verse',
   },
   fr: {
     books: 'Livres',
@@ -292,6 +295,9 @@ export const translations: Record<Language, Record<string, string>> = {
     oldTestament: 'Ancien Testament',
     newTestament: 'Nouveau Testament',
     chooseTestament: 'Choisir le testament',
+    allBooks: 'Tous',
+    maxMasteryLevel: 'Niveau de maîtrise maximum',
+    maxMasteryLevelDesc: 'Nombre de réussites requises pour maîtriser complètement un verset',
   },
   'fr-fob': {
     books: 'Livres',

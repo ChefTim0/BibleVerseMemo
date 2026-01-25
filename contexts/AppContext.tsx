@@ -92,6 +92,7 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
     autoMarkMemorized: true,
     autoMarkThreshold: 5,
     hapticFeedback: true,
+    maxMasteryLevel: 5,
   });
   const [ttsSettings, setTTSSettingsState] = useState<TTSSettings>({
     speed: 'normal',

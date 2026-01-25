@@ -58,6 +58,7 @@ export interface LearningSettings {
   autoMarkMemorized: boolean;
   autoMarkThreshold: number;
   hapticFeedback: boolean;
+  maxMasteryLevel: number;
 }
 
 export type TTSSpeed = 'slow' | 'normal' | 'fast';
