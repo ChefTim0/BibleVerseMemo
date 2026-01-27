@@ -44,6 +44,7 @@ function getUILanguage(bibleVersion: Language): string {
     'LSG': 'fr',
     'FOB': 'fr',
     'darby': 'fr',
+    'DarbyR': 'fr',
     'KJV': 'en',
     'ITADIO': 'it',
     'CEI': 'it',
