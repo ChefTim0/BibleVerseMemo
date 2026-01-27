@@ -2994,6 +2994,7 @@ function getLanguageFromBibleVersion(version: string): string {
     'LSG': 'fr',
     'FOB': 'fr',
     'darby': 'fr',
+    'DarbyR': 'fr',
     'KJV': 'en',
     'en-asv': 'en',
     'ITADIO': 'it',
