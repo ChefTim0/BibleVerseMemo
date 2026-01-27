@@ -48,17 +48,16 @@ export default function SettingsScreen() {
   const [customUrl, setCustomUrl] = useState('');
   const [isLoadingCustomVersion, setIsLoadingCustomVersion] = useState(false);
 
-  const loadVoices = useCallback(async () => {
-    const langCode = getLanguageCode(language);
-    const voices = await getVoicesForLanguage(langCode);
-    setAvailableVoices(voices);
-    setLoadingVoices(false);
-    console.log('[Settings] Loaded voices for', langCode, ':', voices.length);
-  }, [language]);
-
   useEffect(() => {
+    const loadVoices = async () => {
+      const langCode = getLanguageCode(language);
+      const voices = await getVoicesForLanguage(langCode);
+      setAvailableVoices(voices);
+      setLoadingVoices(false);
+      console.log('[Settings] Loaded voices for', langCode, ':', voices.length);
+    };
     loadVoices();
-  }, [loadVoices]);
+  }, [language]);
 
   const handleVoiceChange = async (voiceIdentifier: string | undefined) => {
     await setTTSSettings({ voiceIdentifier });
