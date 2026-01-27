@@ -1,17 +1,19 @@
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Linking, Switch, Alert, Platform, Modal, ActivityIndicator, TextInput } from "react-native";
 import Slider from '@react-native-community/slider';
 import { Picker } from '@react-native-picker/picker';
-import { Check, Heart, BookOpen, Sun, Moon, Brain, Download, Upload, RefreshCcw, Palette, Zap, Folder, Info, X, Volume2, Play, User, UserRound, Plus, Link as LinkIcon, FileText, Github } from "lucide-react-native";
+import { Check, Heart, BookOpen, Sun, Moon, Brain, Download, Upload, RefreshCcw, Palette, Zap, Folder, Info, X, Volume2, Play, User, UserRound, Plus, Link as LinkIcon, FileText, Github, Bell, Trash2 } from "lucide-react-native";
 import { useApp } from "../../contexts/AppContext";
 import { t } from "../../constants/translations";
 import { getColors } from "../../constants/colors";
-import type { LearningMode, Theme, Language, TTSSpeed, TTSVoice, ValidationSettings } from "../../types/database";
+import type { LearningMode, Theme, Language, TTSSpeed, TTSVoice, ValidationSettings, NotificationTime } from "../../types/database";
 import { File, Paths } from 'expo-file-system';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Sharing from 'expo-sharing';
 import { PROGRESSION_FILE_VERSION } from "../../constants/features";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { getVoicesForLanguage, getLanguageCode, speak, stop } from "../../utils/tts";
+import { scheduleMultipleReminders, cancelAllNotifications } from "../../utils/notifications";
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const LANGUAGES: { code: Language; name: string; flag: string }[] = [
   { code: 'LSG', name: 'Français - Louis Segond 1910', flag: '🇫🇷' },
@@ -38,7 +40,7 @@ const LANGUAGES: { code: Language; name: string; flag: string }[] = [
 ];
 
 export default function SettingsScreen() {
-  const { language, uiLanguage, learningMode, theme, dyslexiaSettings, validationSettings, appearanceSettings, learningSettings, ttsSettings, progress, customVersionUrl, setLanguage, setLearningMode, setTheme, setDyslexiaSettings, setValidationSettings, setAppearanceSettings, setLearningSettings, setTTSSettings, setCustomVersionUrl } = useApp();
+  const { language, uiLanguage, learningMode, theme, dyslexiaSettings, validationSettings, appearanceSettings, learningSettings, ttsSettings, notificationSettings, progress, customVersionUrl, setLanguage, setLearningMode, setTheme, setDyslexiaSettings, setValidationSettings, setAppearanceSettings, setLearningSettings, setTTSSettings, setNotificationSettings, setCustomVersionUrl } = useApp();
   const colors = getColors(theme);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [availableVoices, setAvailableVoices] = useState<TTSVoice[]>([]);
@@ -47,6 +49,8 @@ export default function SettingsScreen() {
   const [showCustomVersionModal, setShowCustomVersionModal] = useState(false);
   const [customUrl, setCustomUrl] = useState('');
   const [isLoadingCustomVersion, setIsLoadingCustomVersion] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState<number | null>(null);
+  const [tempTime, setTempTime] = useState(new Date());
 
   useEffect(() => {
     const loadVoices = async () => {
@@ -315,6 +319,71 @@ export default function SettingsScreen() {
   const handleResetVoice = async () => {
     await stop();
     await setTTSSettings({ voiceIdentifier: undefined });
+  };
+
+  const handleNotificationToggle = async (value: boolean) => {
+    console.log('[Settings] Notification toggle:', value);
+    
+    if (!value) {
+      await cancelAllNotifications();
+      await setNotificationSettings({ enabled: false, times: [] });
+    } else {
+      const defaultTime: NotificationTime = { hour: 9, minute: 0 };
+      await setNotificationSettings({ enabled: true, times: [defaultTime] });
+      await scheduleMultipleReminders([defaultTime]);
+    }
+  };
+
+  const handleAddNotificationTime = async () => {
+    if (notificationSettings.times.length >= 5) {
+      Alert.alert(t(uiLanguage, 'error'), t(uiLanguage, 'maxNotificationsReached'));
+      return;
+    }
+    
+    const newTime: NotificationTime = { hour: 12, minute: 0 };
+    const newTimes = [...notificationSettings.times, newTime];
+    await setNotificationSettings({ times: newTimes });
+    await scheduleMultipleReminders(newTimes);
+  };
+
+  const handleRemoveNotificationTime = async (index: number) => {
+    const newTimes = notificationSettings.times.filter((_, i) => i !== index);
+    await setNotificationSettings({ times: newTimes });
+    
+    if (newTimes.length === 0) {
+      await setNotificationSettings({ enabled: false });
+      await cancelAllNotifications();
+    } else {
+      await scheduleMultipleReminders(newTimes);
+    }
+  };
+
+  const handleTimeChange = async (index: number, event: any, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowTimePicker(null);
+    }
+    
+    if (selectedDate) {
+      const hour = selectedDate.getHours();
+      const minute = selectedDate.getMinutes();
+      const newTimes = [...notificationSettings.times];
+      newTimes[index] = { hour, minute };
+      await setNotificationSettings({ times: newTimes });
+      await scheduleMultipleReminders(newTimes);
+      
+      if (Platform.OS === 'ios') {
+        setShowTimePicker(null);
+      }
+    }
+  };
+
+  const openTimePicker = (index: number) => {
+    const time = notificationSettings.times[index];
+    const date = new Date();
+    date.setHours(time.hour);
+    date.setMinutes(time.minute);
+    setTempTime(date);
+    setShowTimePicker(index);
   };
 
   const handleImportProgression = async () => {
@@ -891,6 +960,74 @@ export default function SettingsScreen() {
               {t(uiLanguage, 'maxMasteryLevelDesc')}
             </Text>
           </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            <Bell color={colors.success} size={20} /> {t(uiLanguage, 'notificationReminders')}
+          </Text>
+          
+          <View style={[styles.option, { backgroundColor: colors.cardBackground }]}>
+            <View style={styles.themeOption}>
+              <Text style={[styles.optionText, { color: colors.text }]}>{t(uiLanguage, 'enableNotifications')}</Text>
+            </View>
+            <Switch
+              value={notificationSettings.enabled}
+              onValueChange={handleNotificationToggle}
+              trackColor={{ false: colors.border, true: colors.primary + '80' }}
+              thumbColor={notificationSettings.enabled ? colors.primary : colors.textTertiary}
+            />
+          </View>
+
+          {notificationSettings.enabled && (
+            <View style={styles.notificationTimesContainer}>
+              {notificationSettings.times.map((time, index) => (
+                <View key={index} style={[styles.notificationTimeRow, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+                  <TouchableOpacity
+                    style={styles.timeButton}
+                    onPress={() => openTimePicker(index)}
+                  >
+                    <Text style={[styles.timeText, { color: colors.text }]}>
+                      {time.hour.toString().padStart(2, '0')}:{time.minute.toString().padStart(2, '0')}
+                    </Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    style={[styles.removeTimeButton, { backgroundColor: colors.error + '20' }]}
+                    onPress={() => handleRemoveNotificationTime(index)}
+                  >
+                    <Trash2 color={colors.error} size={18} />
+                  </TouchableOpacity>
+                </View>
+              ))}
+
+              {showTimePicker !== null && (
+                <DateTimePicker
+                  value={tempTime}
+                  mode="time"
+                  is24Hour={true}
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={(event, date) => handleTimeChange(showTimePicker, event, date)}
+                />
+              )}
+
+              {notificationSettings.times.length < 5 && (
+                <TouchableOpacity
+                  style={[styles.addTimeButton, { backgroundColor: colors.primary + '20', borderColor: colors.primary }]}
+                  onPress={handleAddNotificationTime}
+                >
+                  <Plus color={colors.primary} size={20} />
+                  <Text style={[styles.addTimeButtonText, { color: colors.primary }]}>
+                    {t(uiLanguage, 'addNotificationTime')}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+
+          <Text style={[styles.dyslexiaInfo, { color: colors.textSecondary }]}>
+            {t(uiLanguage, 'notificationInfo')}
+          </Text>
         </View>
 
         <View style={styles.section}>
@@ -1524,5 +1661,43 @@ const styles = StyleSheet.create({
     justifyContent: "center" as const,
     paddingVertical: 12,
     marginTop: 16,
+  },
+  notificationTimesContainer: {
+    gap: 8,
+    marginTop: 12,
+  },
+  notificationTimeRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "space-between" as const,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  timeButton: {
+    flex: 1,
+    padding: 8,
+  },
+  timeText: {
+    fontSize: 18,
+    fontWeight: "600" as const,
+  },
+  removeTimeButton: {
+    padding: 8,
+    borderRadius: 8,
+  },
+  addTimeButton: {
+    padding: 14,
+    borderRadius: 12,
+    flexDirection: "row" as const,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    gap: 8,
+    borderWidth: 2,
+    marginTop: 8,
+  },
+  addTimeButtonText: {
+    fontSize: 15,
+    fontWeight: "600" as const,
   },
 });

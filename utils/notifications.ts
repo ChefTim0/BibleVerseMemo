@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import type { NotificationTime } from '../types/database';
 
 let Notifications: any = null;
 
@@ -60,6 +61,41 @@ export async function scheduleVerseReminderNotification(
   });
 
   return identifier;
+}
+
+export async function scheduleMultipleReminders(
+  times: NotificationTime[]
+): Promise<string[]> {
+  const hasPermission = await requestNotificationPermissions();
+  
+  if (!hasPermission || Platform.OS === 'web') {
+    console.log('Notification permission not granted or on web');
+    return [];
+  }
+
+  await Notifications.cancelAllScheduledNotificationsAsync();
+
+  const identifiers: string[] = [];
+
+  for (const time of times) {
+    const identifier = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: '📖 Temps de s\'exercer !',
+        body: 'Révisez vos versets pour progresser',
+        data: { type: 'daily_reminder', hour: time.hour, minute: time.minute },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+        hour: time.hour,
+        minute: time.minute,
+        repeats: true,
+      },
+    });
+    identifiers.push(identifier);
+    console.log(`[Notifications] Scheduled notification at ${time.hour}:${time.minute.toString().padStart(2, '0')}`);
+  }
+
+  return identifiers;
 }
 
 export async function cancelAllNotifications(): Promise<void> {

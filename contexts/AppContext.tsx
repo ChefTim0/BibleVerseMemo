@@ -1,7 +1,7 @@
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
-import type { Language, LearningMode, VerseProgress, Theme, DyslexiaSettings, ValidationSettings, AppearanceSettings, LearningSettings, TTSSettings } from '../types/database';
+import type { Language, LearningMode, VerseProgress, Theme, DyslexiaSettings, ValidationSettings, AppearanceSettings, LearningSettings, TTSSettings, NotificationSettings } from '../types/database';
 
 interface AppState {
   language: Language;
@@ -14,6 +14,7 @@ interface AppState {
   appearanceSettings: AppearanceSettings;
   learningSettings: LearningSettings;
   ttsSettings: TTSSettings;
+  notificationSettings: NotificationSettings;
   customVersionUrl: string | null;
   setLanguage: (language: Language) => Promise<void>;
   setLearningMode: (mode: LearningMode) => Promise<void>;
@@ -23,6 +24,7 @@ interface AppState {
   setAppearanceSettings: (settings: Partial<AppearanceSettings>) => Promise<void>;
   setLearningSettings: (settings: Partial<LearningSettings>) => Promise<void>;
   setTTSSettings: (settings: Partial<TTSSettings>) => Promise<void>;
+  setNotificationSettings: (settings: Partial<NotificationSettings>) => Promise<void>;
   setCustomVersionUrl: (versionName: string, content: string) => Promise<void>;
   getVerseProgress: (book: string, chapter: number, verse: number) => VerseProgress | undefined;
   updateProgress: (progress: VerseProgress) => Promise<void>;
@@ -40,6 +42,7 @@ const VALIDATION_KEY = '@validation_settings';
 const APPEARANCE_KEY = '@appearance_settings';
 const LEARNING_SETTINGS_KEY = '@learning_settings';
 const TTS_SETTINGS_KEY = '@tts_settings';
+const NOTIFICATION_SETTINGS_KEY = '@notification_settings';
 const CUSTOM_VERSION_KEY = '@custom_version';
 
 function getUILanguage(bibleVersion: Language): string {
@@ -104,6 +107,10 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
     speed: 'normal',
     voiceIdentifier: undefined,
   });
+  const [notificationSettings, setNotificationSettingsState] = useState<NotificationSettings>({
+    enabled: false,
+    times: [],
+  });
   const [customVersionUrl, setCustomVersionUrlState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -117,7 +124,7 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
 
   const loadSettings = async () => {
     try {
-      const [savedLanguage, savedMode, savedTheme, savedProgress, savedDyslexia, savedValidation, savedAppearance, savedLearning, savedTTS, savedCustomVersion] = await Promise.all([
+      const [savedLanguage, savedMode, savedTheme, savedProgress, savedDyslexia, savedValidation, savedAppearance, savedLearning, savedTTS, savedNotifications, savedCustomVersion] = await Promise.all([
         AsyncStorage.getItem(LANGUAGE_KEY),
         AsyncStorage.getItem(LEARNING_MODE_KEY),
         AsyncStorage.getItem(THEME_KEY),
@@ -127,6 +134,7 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
         AsyncStorage.getItem(APPEARANCE_KEY),
         AsyncStorage.getItem(LEARNING_SETTINGS_KEY),
         AsyncStorage.getItem(TTS_SETTINGS_KEY),
+        AsyncStorage.getItem(NOTIFICATION_SETTINGS_KEY),
         AsyncStorage.getItem(CUSTOM_VERSION_KEY),
       ]);
 
@@ -139,6 +147,7 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
       if (savedAppearance) setAppearanceSettingsState(JSON.parse(savedAppearance));
       if (savedLearning) setLearningSettingsState(JSON.parse(savedLearning));
       if (savedTTS) setTTSSettingsState(JSON.parse(savedTTS));
+      if (savedNotifications) setNotificationSettingsState(JSON.parse(savedNotifications));
       if (savedCustomVersion) setCustomVersionUrlState(savedCustomVersion);
     } catch (error) {
       console.error('Error loading settings:', error);
@@ -192,6 +201,12 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
     const newSettings = { ...ttsSettings, ...settings };
     setTTSSettingsState(newSettings);
     await AsyncStorage.setItem(TTS_SETTINGS_KEY, JSON.stringify(newSettings));
+  };
+
+  const setNotificationSettings = async (settings: Partial<NotificationSettings>) => {
+    const newSettings = { ...notificationSettings, ...settings };
+    setNotificationSettingsState(newSettings);
+    await AsyncStorage.setItem(NOTIFICATION_SETTINGS_KEY, JSON.stringify(newSettings));
   };
 
   const setCustomVersionUrl = async (versionName: string, content: string) => {
@@ -266,6 +281,7 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
     appearanceSettings,
     learningSettings,
     ttsSettings,
+    notificationSettings,
     customVersionUrl,
     setLanguage,
     setLearningMode,
@@ -275,6 +291,7 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
     setAppearanceSettings,
     setLearningSettings,
     setTTSSettings,
+    setNotificationSettings,
     setCustomVersionUrl,
     getVerseProgress,
     updateProgress,

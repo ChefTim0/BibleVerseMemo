@@ -80,3 +80,13 @@ export interface TTSSettings {
   speed: TTSSpeed;
   voiceIdentifier?: string;
 }
+
+export interface NotificationTime {
+  hour: number;
+  minute: number;
+}
+
+export interface NotificationSettings {
+  enabled: boolean;
+  times: NotificationTime[];
+}
