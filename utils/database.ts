@@ -1,4 +1,7 @@
 import type { Verse, Language } from '../types/database';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const CUSTOM_VERSION_KEY = '@custom_version';
 
 const BIBLE_URLS: Record<Language, string> = {
   'ITADIO': 'https://raw.githubusercontent.com/ChefTim0/bible4u/refs/heads/main/ITADIO.txt',
@@ -74,40 +77,50 @@ async function parseBibleFile(lang: Language): Promise<ParsedBible> {
   }
 
   try {
-    const url = BIBLE_URLS[lang];
-    if (!url) {
-      throw new Error(`No URL configured for language: ${lang}`);
-    }
-    
     let text = '';
-    let response: Response | null = null;
     
-    try {
-      console.log(`[Database] Downloading ${lang}.txt from GitHub...`);
-      response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+    if (lang.startsWith('CUSTOM_')) {
+      console.log(`[Database] Loading custom version: ${lang}`);
+      const customContent = await AsyncStorage.getItem(CUSTOM_VERSION_KEY);
+      if (!customContent) {
+        throw new Error('Custom version content not found');
       }
-      text = await response.text();
-    } catch (primaryError) {
-      console.error(`[Database] Primary source failed:`, primaryError);
-      console.log(`[Database] Trying fallback source...`);
+      text = customContent;
+    } else {
+      const url = BIBLE_URLS[lang];
+      if (!url) {
+        throw new Error(`No URL configured for language: ${lang}`);
+      }
       
-      const fallbackUrl = FALLBACK_BIBLE_URLS[lang];
-      if (fallbackUrl) {
-        try {
-          response = await fetch(fallbackUrl);
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          text = await response.text();
-          console.log(`[Database] Successfully loaded from fallback source`);
-        } catch (fallbackError) {
-          console.error(`[Database] Fallback source also failed:`, fallbackError);
-          throw new Error(`Failed to fetch from both primary and fallback sources`);
+      let response: Response | null = null;
+      
+      try {
+        console.log(`[Database] Downloading ${lang}.txt from GitHub...`);
+        response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-      } else {
-        throw primaryError;
+        text = await response.text();
+      } catch (primaryError) {
+        console.error(`[Database] Primary source failed:`, primaryError);
+        console.log(`[Database] Trying fallback source...`);
+        
+        const fallbackUrl = FALLBACK_BIBLE_URLS[lang];
+        if (fallbackUrl) {
+          try {
+            response = await fetch(fallbackUrl);
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            text = await response.text();
+            console.log(`[Database] Successfully loaded from fallback source`);
+          } catch (fallbackError) {
+            console.error(`[Database] Fallback source also failed:`, fallbackError);
+            throw new Error(`Failed to fetch from both primary and fallback sources`);
+          }
+        } else {
+          throw primaryError;
+        }
       }
     }
     console.log(`[Database] Downloaded ${text.length} characters`);

@@ -1,7 +1,7 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Linking, Switch, Alert, Platform, Modal, ActivityIndicator } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Linking, Switch, Alert, Platform, Modal, ActivityIndicator, TextInput } from "react-native";
 import Slider from '@react-native-community/slider';
 import { Picker } from '@react-native-picker/picker';
-import { Check, Heart, BookOpen, Sun, Moon, Brain, Download, Upload, RefreshCcw, Palette, Zap, Folder, Info, X, Volume2, Play, User, UserRound } from "lucide-react-native";
+import { Check, Heart, BookOpen, Sun, Moon, Brain, Download, Upload, RefreshCcw, Palette, Zap, Folder, Info, X, Volume2, Play, User, UserRound, Plus, Link as LinkIcon, FileText } from "lucide-react-native";
 import { useApp } from "../../contexts/AppContext";
 import { t } from "../../constants/translations";
 import { getColors } from "../../constants/colors";
@@ -38,12 +38,15 @@ const LANGUAGES: { code: Language; name: string; flag: string }[] = [
 ];
 
 export default function SettingsScreen() {
-  const { language, uiLanguage, learningMode, theme, dyslexiaSettings, validationSettings, appearanceSettings, learningSettings, ttsSettings, progress, setLanguage, setLearningMode, setTheme, setDyslexiaSettings, setValidationSettings, setAppearanceSettings, setLearningSettings, setTTSSettings } = useApp();
+  const { language, uiLanguage, learningMode, theme, dyslexiaSettings, validationSettings, appearanceSettings, learningSettings, ttsSettings, progress, customVersionUrl, setLanguage, setLearningMode, setTheme, setDyslexiaSettings, setValidationSettings, setAppearanceSettings, setLearningSettings, setTTSSettings, setCustomVersionUrl } = useApp();
   const colors = getColors(theme);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [availableVoices, setAvailableVoices] = useState<TTSVoice[]>([]);
   const [loadingVoices, setLoadingVoices] = useState(false);
   const [testingVoice, setTestingVoice] = useState<string | null>(null);
+  const [showCustomVersionModal, setShowCustomVersionModal] = useState(false);
+  const [customUrl, setCustomUrl] = useState('');
+  const [isLoadingCustomVersion, setIsLoadingCustomVersion] = useState(false);
 
   const loadVoices = useCallback(async () => {
     const langCode = getLanguageCode(language);
@@ -101,13 +104,95 @@ export default function SettingsScreen() {
 
   const handleBooksSource = async () => {
     try {
-      const url = 'https://bible4u.net/en/download';
+      const url = 'https://timprojects.online/sources';
       const canOpen = await Linking.canOpenURL(url);
       if (canOpen) {
         await Linking.openURL(url);
       }
     } catch (error) {
       console.error('Error opening books source link:', error);
+    }
+  };
+
+  const handleOpenFAQ = async () => {
+    try {
+      const url = 'https://timprojects.online/FAQ#Version';
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      }
+    } catch (error) {
+      console.error('Error opening FAQ link:', error);
+    }
+  };
+
+  const handleImportCustomVersion = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'text/plain',
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled) {
+        return;
+      }
+
+      setIsLoadingCustomVersion(true);
+      const file = new File(result.assets[0].uri);
+      const fileContent = file.textSync();
+
+      if (fileContent.length < 100) {
+        Alert.alert(t(uiLanguage, 'error'), t(uiLanguage, 'invalidFileFormat'));
+        setIsLoadingCustomVersion(false);
+        return;
+      }
+
+      const customVersionName = 'CUSTOM_' + Date.now();
+      await setCustomVersionUrl(customVersionName, fileContent);
+      await setLanguage(customVersionName as Language);
+      
+      setShowCustomVersionModal(false);
+      setIsLoadingCustomVersion(false);
+      Alert.alert(t(uiLanguage, 'success'), t(uiLanguage, 'customVersionImported'));
+    } catch (error) {
+      console.error('Error importing custom version:', error);
+      setIsLoadingCustomVersion(false);
+      Alert.alert(t(uiLanguage, 'error'), t(uiLanguage, 'failedToImport'));
+    }
+  };
+
+  const handleLoadFromUrl = async () => {
+    if (!customUrl.trim()) {
+      Alert.alert(t(uiLanguage, 'error'), t(uiLanguage, 'pleaseEnterUrl'));
+      return;
+    }
+
+    setIsLoadingCustomVersion(true);
+    try {
+      const response = await fetch(customUrl.trim());
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const fileContent = await response.text();
+
+      if (fileContent.length < 100) {
+        Alert.alert(t(uiLanguage, 'error'), t(uiLanguage, 'invalidFileFormat'));
+        setIsLoadingCustomVersion(false);
+        return;
+      }
+
+      const customVersionName = 'CUSTOM_' + Date.now();
+      await setCustomVersionUrl(customVersionName, fileContent);
+      await setLanguage(customVersionName as Language);
+      
+      setShowCustomVersionModal(false);
+      setCustomUrl('');
+      setIsLoadingCustomVersion(false);
+      Alert.alert(t(uiLanguage, 'success'), t(uiLanguage, 'customVersionImported'));
+    } catch (error) {
+      console.error('Error loading from URL:', error);
+      setIsLoadingCustomVersion(false);
+      Alert.alert(t(uiLanguage, 'error'), t(uiLanguage, 'failedToLoadUrl'));
     }
   };
 
@@ -344,8 +429,24 @@ export default function SettingsScreen() {
                   style={Platform.OS === 'android' ? { backgroundColor: colors.cardBackground } : undefined}
                 />
               ))}
+              {language.startsWith('CUSTOM_') && (
+                <Picker.Item
+                  label={t(uiLanguage, 'customVersion')}
+                  value={language}
+                  color={colors.text}
+                  style={Platform.OS === 'android' ? { backgroundColor: colors.cardBackground } : undefined}
+                />
+              )}
             </Picker>
           </View>
+
+          <TouchableOpacity
+            style={[styles.customVersionButton, { backgroundColor: colors.primary + '20', borderColor: colors.primary }]}
+            onPress={() => setShowCustomVersionModal(true)}
+          >
+            <Plus color={colors.primary} size={20} />
+            <Text style={[styles.customVersionButtonText, { color: colors.primary }]}>{t(uiLanguage, 'importCustomVersion')}</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
@@ -874,6 +975,89 @@ export default function SettingsScreen() {
           </View>
         </View>
       </Modal>
+
+      <Modal
+        visible={showCustomVersionModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowCustomVersionModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>{t(uiLanguage, 'importCustomVersion')}</Text>
+              <TouchableOpacity
+                onPress={() => setShowCustomVersionModal(false)}
+                style={styles.closeButton}
+              >
+                <X color={colors.text} size={24} />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.modalBody}>
+              <Text style={[styles.customVersionDescription, { color: colors.textSecondary }]}>
+                {t(uiLanguage, 'customVersionDescription')}
+              </Text>
+
+              <TouchableOpacity
+                style={[styles.faqButton, { backgroundColor: colors.info + '20', borderColor: colors.info }]}
+                onPress={handleOpenFAQ}
+              >
+                <Info color={colors.info} size={18} />
+                <Text style={[styles.faqButtonText, { color: colors.info }]}>{t(uiLanguage, 'viewFormatGuide')}</Text>
+              </TouchableOpacity>
+
+              <Text style={[styles.inputLabel, { color: colors.text }]}>{t(uiLanguage, 'enterUrl')}:</Text>
+              <TextInput
+                style={[styles.urlInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
+                placeholder={t(uiLanguage, 'urlPlaceholder')}
+                placeholderTextColor={colors.textTertiary}
+                value={customUrl}
+                onChangeText={setCustomUrl}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="url"
+              />
+
+              <TouchableOpacity
+                style={[styles.modalActionButton, { backgroundColor: colors.primary }]}
+                onPress={handleLoadFromUrl}
+                disabled={isLoadingCustomVersion}
+              >
+                {isLoadingCustomVersion ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <LinkIcon color="#fff" size={20} />
+                    <Text style={styles.modalActionButtonText}>{t(uiLanguage, 'loadFromUrl')}</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+
+              <View style={styles.divider}>
+                <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+                <Text style={[styles.dividerText, { color: colors.textSecondary }]}>{t(uiLanguage, 'or')}</Text>
+                <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+              </View>
+
+              <TouchableOpacity
+                style={[styles.modalActionButton, { backgroundColor: colors.warning }]}
+                onPress={handleImportCustomVersion}
+                disabled={isLoadingCustomVersion}
+              >
+                {isLoadingCustomVersion ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <FileText color="#fff" size={20} />
+                    <Text style={styles.modalActionButtonText}>{t(uiLanguage, 'importLocalFile')}</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -1242,5 +1426,78 @@ const styles = StyleSheet.create({
   voiceEmptyText: {
     fontSize: 14,
     textAlign: "center" as const,
+  },
+  customVersionButton: {
+    padding: 14,
+    borderRadius: 12,
+    flexDirection: "row" as const,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    gap: 8,
+    borderWidth: 2,
+    marginTop: 12,
+  },
+  customVersionButtonText: {
+    fontSize: 15,
+    fontWeight: "600" as const,
+  },
+  customVersionDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  faqButton: {
+    padding: 12,
+    borderRadius: 10,
+    flexDirection: "row" as const,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    gap: 8,
+    borderWidth: 1,
+    marginBottom: 20,
+  },
+  faqButtonText: {
+    fontSize: 14,
+    fontWeight: "600" as const,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: "600" as const,
+    marginBottom: 8,
+  },
+  urlInput: {
+    padding: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    fontSize: 14,
+    marginBottom: 16,
+  },
+  modalActionButton: {
+    padding: 14,
+    borderRadius: 10,
+    flexDirection: "row" as const,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    gap: 8,
+    marginBottom: 12,
+  },
+  modalActionButtonText: {
+    fontSize: 15,
+    fontWeight: "600" as const,
+    color: "#fff",
+  },
+  divider: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 12,
+    marginVertical: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    fontSize: 14,
+    fontWeight: "500" as const,
   },
 });
