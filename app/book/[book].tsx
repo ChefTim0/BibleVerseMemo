@@ -2,8 +2,8 @@ import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator }
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import { useState, useEffect, useCallback } from "react";
 import { useApp } from "../../contexts/AppContext";
-import { getChapters, getBookName } from "../../utils/database";
-import { t } from "../../constants/translations";
+import { getChapters } from "../../utils/database";
+import { t, getBookName } from "../../constants/translations";
 import { getColors } from "../../constants/colors";
 
 export default function ChaptersScreen() {
@@ -28,7 +28,7 @@ export default function ChaptersScreen() {
       console.log('[ChaptersScreen] Chapters loaded:', chaptersList.length);
       setChapters(chaptersList);
       
-      const name = await getBookName(language, book);
+      const name = getBookName(uiLanguage, book);
       console.log('[ChaptersScreen] Book name:', name);
       setBookName(name);
     } catch (error) {
@@ -36,7 +36,7 @@ export default function ChaptersScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [book, language]);
+  }, [book, language, uiLanguage]);
 
   useEffect(() => {
     if (book) {

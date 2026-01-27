@@ -101,7 +101,7 @@ export default function LearnScreen() {
       });
     } else {
       const normalizedAnswer = userAnswer.trim().toLowerCase();
-      const bookNameInLanguage = getBookName(language, verseData.book).toLowerCase();
+      const bookNameInLanguage = getBookName(uiLanguage, verseData.book).toLowerCase();
       const hasBook = normalizedAnswer.includes(verseData.book.toLowerCase()) || 
                       normalizedAnswer.includes(bookNameInLanguage);
       correct = hasBook && 
@@ -309,7 +309,7 @@ export default function LearnScreen() {
             <>
               <View style={styles.referenceRow}>
                 <Text style={[styles.reference, { color: colors.primary }]}>
-                  {getBookName(language, verseData.book)} {verseData.chapter}:{verseData.verse}
+                  {getBookName(uiLanguage, verseData.book)} {verseData.chapter}:{verseData.verse}
                 </Text>
                 <TouchableOpacity
                   style={[styles.ttsButton, { backgroundColor: isSpeaking ? colors.primary + '20' : colors.cardBackground }]}

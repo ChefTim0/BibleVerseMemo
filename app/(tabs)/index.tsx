@@ -3,8 +3,8 @@ import { useRouter } from "expo-router";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Shuffle, RefreshCw, X, BookOpen } from "lucide-react-native";
 import { useApp } from "../../contexts/AppContext";
-import { getBooks, getRandomVerse, getBookName, getRandomNewTestamentVerse, getRandomOldTestamentVerse } from "../../utils/database";
-import { t } from "../../constants/translations";
+import { getBooks, getRandomVerse, getRandomNewTestamentVerse, getRandomOldTestamentVerse } from "../../utils/database";
+import { t, getBookName } from "../../constants/translations";
 import { getColors } from "../../constants/colors";
 import type { Verse } from "../../types/database";
 
@@ -40,7 +40,7 @@ export default function BooksScreen() {
       
       const names: Record<string, string> = {};
       for (const bookId of booksList) {
-        const name = await getBookName(language, bookId);
+        const name = getBookName(uiLanguage, bookId);
         console.log('[BooksScreen] Book name:', bookId, '->', name);
         names[bookId] = name;
       }
@@ -53,7 +53,7 @@ export default function BooksScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [language]);
+  }, [language, uiLanguage]);
 
   useEffect(() => {
     loadBooks();
@@ -71,7 +71,7 @@ export default function BooksScreen() {
         if (verse) {
           console.log('[BooksScreen] Daily verse loaded:', verse.book, verse.chapter, verse.verse);
           setDailyVerse(verse);
-          const bookNameStr = await getBookName(language, verse.book);
+          const bookNameStr = getBookName(uiLanguage, verse.book);
           setDailyVerseBookName(bookNameStr);
           setShowDailyVerse(true);
           Animated.parallel([

@@ -85,7 +85,7 @@ export default function MemorizedScreen() {
                     styles.filterTabText,
                     { color: isSelected ? '#fff' : colors.text }
                   ]}>
-                    {getBookName(language, book)} ({count})
+                    {getBookName(uiLanguage, book)} ({count})
                   </Text>
                 </TouchableOpacity>
               );
@@ -115,7 +115,7 @@ export default function MemorizedScreen() {
                     <Heart color={colors.success} size={20} fill={colors.success} />
                   </View>
                   <Text style={[styles.verseReference, { color: colors.primary }]}>
-                    {getBookName(language, verseProgress.book)} {verseProgress.chapter}:{verseProgress.verse}
+                    {getBookName(uiLanguage, verseProgress.book)} {verseProgress.chapter}:{verseProgress.verse}
                   </Text>
                 </View>
                 

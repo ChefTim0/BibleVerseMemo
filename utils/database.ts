@@ -331,11 +331,7 @@ export async function getRandomVerse(lang: Language): Promise<Verse | null> {
   return randomVerse;
 }
 
-export async function getBookName(lang: Language, book: string): Promise<string> {
-  const books = await fetchBooks(lang);
-  const bookData = books.find(b => b.book === book);
-  return bookData?.bookName || book;
-}
+
 
 const NEW_TESTAMENT_PATTERNS = [
   'matt', 'matth', 'matthieu', 'mateo', 'matteo',
