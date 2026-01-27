@@ -301,9 +301,9 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: async () => {
             await setDyslexiaSettings({ enabled: false, fontSize: 18, lineHeight: 32, wordSpacing: 0, validationTolerance: 0.8 });
-            await setValidationSettings({ toleranceLevel: 0.8, allowLetterInversion: false, ignorePunctuation: false });
+            await setValidationSettings({ toleranceLevel: 0.95, allowLetterInversion: false, ignorePunctuation: true });
             await setAppearanceSettings({ fontSize: 16, animationsEnabled: true, showStartupVerse: true });
-            await setLearningSettings({ autoAdvance: false, showHints: true, maxHints: 10, autoMarkMemorized: false, autoMarkThreshold: 5, hapticFeedback: true, maxMasteryLevel: 5 });
+            await setLearningSettings({ autoAdvance: false, showHints: true, maxHints: 10, autoMarkMemorized: false, autoMarkThreshold: 5, hapticFeedback: true, maxMasteryLevel: 20 });
             await setTTSSettings({ speed: 'normal', voiceIdentifier: undefined });
             Alert.alert(t(uiLanguage, 'success'), t(uiLanguage, 'settingsReset'));
           },

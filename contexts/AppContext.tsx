@@ -85,9 +85,9 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
     validationTolerance: 0.8,
   });
   const [validationSettings, setValidationSettingsState] = useState<ValidationSettings>({
-    toleranceLevel: 0.8,
+    toleranceLevel: 0.95,
     allowLetterInversion: false,
-    ignorePunctuation: false,
+    ignorePunctuation: true,
   });
   const [appearanceSettings, setAppearanceSettingsState] = useState<AppearanceSettings>({
     fontSize: 16,
@@ -101,7 +101,7 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
     autoMarkMemorized: true,
     autoMarkThreshold: 5,
     hapticFeedback: true,
-    maxMasteryLevel: 5,
+    maxMasteryLevel: 20,
   });
   const [ttsSettings, setTTSSettingsState] = useState<TTSSettings>({
     speed: 'normal',
