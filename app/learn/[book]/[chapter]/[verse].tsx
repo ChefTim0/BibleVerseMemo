@@ -12,7 +12,7 @@ import { checkDyslexiaFriendlyMatch } from "../../../../utils/text-validation";
 import type { Verse } from "../../../../types/database";
 
 export default function LearnScreen() {
-  const { language, uiLanguage, learningMode, theme, dyslexiaSettings, lineByLineSettings, appearanceSettings, learningSettings, ttsSettings, getVerseProgress, updateProgress, toggleMemorized } = useApp();
+  const { language, uiLanguage, learningMode, theme, dyslexiaSettings, appearanceSettings, learningSettings, ttsSettings, getVerseProgress, updateProgress, toggleMemorized } = useApp();
   const colors = getColors(theme);
   const router = useRouter();
   const { book, chapter, verse } = useLocalSearchParams<{ book: string; chapter: string; verse: string }>();
@@ -26,21 +26,7 @@ export default function LearnScreen() {
   const [hintsUsed, setHintsUsed] = useState(0);
   const [masteryLevel, setMasteryLevel] = useState(0);
   const [isMemorized, setIsMemorized] = useState(false);
-  const [currentLineIndex, setCurrentLineIndex] = useState(0);
-  const [verseLines, setVerseLines] = useState<string[]>([]);
   const [isSpeaking, setIsSpeaking] = useState(false);
-
-  const splitIntoLines = useCallback((text: string): string[] => {
-    const words = text.split(' ');
-    const lines: string[] = [];
-    const wordsPerLine = lineByLineSettings.wordsPerLine;
-    
-    for (let i = 0; i < words.length; i += wordsPerLine) {
-      lines.push(words.slice(i, i + wordsPerLine).join(' '));
-    }
-    
-    return lines;
-  }, [lineByLineSettings.wordsPerLine]);
 
   useEffect(() => {
     const loadVerse = async () => {
@@ -56,12 +42,6 @@ export default function LearnScreen() {
           
           if (learningMode === 'guess-verse') {
             setRevealedWords(new Set());
-            
-            if (lineByLineSettings.enabled) {
-              const lines = splitIntoLines(data.text);
-              setVerseLines(lines);
-              setCurrentLineIndex(0);
-            }
           }
         }
       } catch (error) {
@@ -74,7 +54,7 @@ export default function LearnScreen() {
     if (book && chapter && verse) {
       loadVerse();
     }
-  }, [book, chapter, verse, language, getVerseProgress, learningMode, lineByLineSettings.enabled, splitIntoLines]);
+  }, [book, chapter, verse, language, getVerseProgress, learningMode]);
 
   const handleHint = () => {
     if (learningMode === 'guess-verse' && verseData && learningSettings.showHints) {
@@ -97,14 +77,6 @@ export default function LearnScreen() {
     }
   };
 
-  const handleNextLine = () => {
-    if (currentLineIndex < verseLines.length - 1) {
-      setCurrentLineIndex(prev => prev + 1);
-      setUserAnswer('');
-      setShowFeedback(false);
-    }
-  };
-
   const handleCheck = async () => {
     if (!verseData) return;
 
@@ -113,33 +85,18 @@ export default function LearnScreen() {
     let correct = false;
     
     if (learningMode === 'guess-verse') {
-      if (lineByLineSettings.enabled) {
-        const currentLine = verseLines[currentLineIndex];
-        
-        const result = checkDyslexiaFriendlyMatch(userAnswer, currentLine, {
-          toleranceLevel: dyslexiaSettings.validationTolerance,
-        });
-        correct = result.isMatch;
-        console.log('[Line Check]', {
-          currentLine,
-          userAnswer,
-          similarity: result.similarity,
-          isMatch: result.isMatch,
-        });
-      } else {
-        const textToCheck = verseData.text;
-        
-        const result = checkDyslexiaFriendlyMatch(userAnswer, textToCheck, {
-          toleranceLevel: dyslexiaSettings.validationTolerance,
-        });
-        correct = result.isMatch;
-        console.log('[Verse Check]', {
-          verseText: textToCheck,
-          userAnswer,
-          similarity: result.similarity,
-          isMatch: result.isMatch,
-        });
-      }
+      const textToCheck = verseData.text;
+      
+      const result = checkDyslexiaFriendlyMatch(userAnswer, textToCheck, {
+        toleranceLevel: dyslexiaSettings.validationTolerance,
+      });
+      correct = result.isMatch;
+      console.log('[Verse Check]', {
+        verseText: textToCheck,
+        userAnswer,
+        similarity: result.similarity,
+        isMatch: result.isMatch,
+      });
     } else {
       const normalizedAnswer = userAnswer.trim().toLowerCase();
       const bookNameInLanguage = getBookName(language, verseData.book).toLowerCase();
@@ -187,7 +144,7 @@ export default function LearnScreen() {
       setIsMemorized(true);
     }
 
-    if (learningSettings.autoAdvance && correct && !lineByLineSettings.enabled) {
+    if (learningSettings.autoAdvance && correct) {
       setTimeout(() => {
         handleNext();
       }, 1500);
@@ -197,11 +154,8 @@ export default function LearnScreen() {
   const handleRetry = () => {
     setShowFeedback(false);
     setUserAnswer('');
-    
-    if (!lineByLineSettings.enabled) {
-      setRevealedWords(new Set());
-      setHintsUsed(0);
-    }
+    setRevealedWords(new Set());
+    setHintsUsed(0);
   };
 
   const handleNext = () => {
@@ -253,62 +207,6 @@ export default function LearnScreen() {
 
   const renderMaskedText = () => {
     if (!verseData) return null;
-    
-    if (lineByLineSettings.enabled) {
-      return (
-        <View style={styles.lineByLineContainer}>
-          {verseLines.map((line, index) => {
-            const isCompleted = index < currentLineIndex;
-            const isCurrent = index === currentLineIndex;
-            
-            return (
-              <View key={index} style={[
-                styles.lineContainer,
-                isCompleted && styles.lineCompleted,
-                isCurrent && [styles.lineCurrent, { borderColor: colors.primary }],
-              ]}>
-                {isCompleted ? (
-                  <Text style={[
-                    styles.lineText,
-                    { 
-                      color: colors.success,
-                      fontSize: dyslexiaSettings.enabled ? dyslexiaSettings.fontSize : appearanceSettings.fontSize,
-                      lineHeight: dyslexiaSettings.lineHeight,
-                      letterSpacing: dyslexiaSettings.wordSpacing,
-                    },
-                  ]}>
-                    ✓ {line}
-                  </Text>
-                ) : isCurrent ? (
-                  <Text style={[
-                    styles.lineText,
-                    { 
-                      color: colors.text,
-                      fontSize: dyslexiaSettings.enabled ? dyslexiaSettings.fontSize : appearanceSettings.fontSize,
-                      lineHeight: dyslexiaSettings.lineHeight,
-                      letterSpacing: dyslexiaSettings.wordSpacing,
-                    },
-                  ]}>
-                    {line}
-                  </Text>
-                ) : (
-                  <Text style={[
-                    styles.lineText,
-                    { 
-                      color: colors.textTertiary,
-                      fontSize: dyslexiaSettings.enabled ? dyslexiaSettings.fontSize : appearanceSettings.fontSize,
-                      lineHeight: dyslexiaSettings.lineHeight,
-                    },
-                  ]}>
-                    Ligne {index + 1}
-                  </Text>
-                )}
-              </View>
-            );
-          })}
-        </View>
-      );
-    }
     
     const words = verseData.text.split(' ');
     
@@ -511,23 +409,14 @@ export default function LearnScreen() {
             <Text style={styles.buttonTextPrimary}>{t(uiLanguage, 'check')}</Text>
           </TouchableOpacity>
         ) : isCorrect ? (
-          lineByLineSettings.enabled && currentLineIndex < verseLines.length - 1 ? (
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: colors.primary }]}
-              onPress={handleNextLine}
-            >
-              <Text style={styles.buttonTextPrimary}>Ligne suivante</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              style={[styles.button, styles.buttonSecondary, { backgroundColor: colors.cardBackground, borderColor: colors.primary }]}
-              onPress={handleNext}
-            >
-              <Text style={[styles.buttonTextSecondary, { color: colors.primary }]}>
-                {t(uiLanguage, 'nextVerse')}
-              </Text>
-            </TouchableOpacity>
-          )
+          <TouchableOpacity
+            style={[styles.button, styles.buttonSecondary, { backgroundColor: colors.cardBackground, borderColor: colors.primary }]}
+            onPress={handleNext}
+          >
+            <Text style={[styles.buttonTextSecondary, { color: colors.primary }]}>
+              {t(uiLanguage, 'nextVerse')}
+            </Text>
+          </TouchableOpacity>
         ) : (
           <View style={styles.buttonGroup}>
             <TouchableOpacity
@@ -750,25 +639,5 @@ const styles = StyleSheet.create({
   memorizedText: {
     fontSize: 14,
     fontWeight: "600" as const,
-  },
-  lineByLineContainer: {
-    gap: 12,
-  },
-  lineContainer: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: "transparent",
-  },
-  lineCurrent: {
-    backgroundColor: "rgba(59, 130, 246, 0.1)",
-    borderWidth: 2,
-  },
-  lineCompleted: {
-    backgroundColor: "rgba(16, 185, 129, 0.1)",
-  },
-  lineText: {
-    fontWeight: "500" as const,
   },
 });

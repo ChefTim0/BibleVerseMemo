@@ -277,30 +277,6 @@ export default function SettingsScreen() {
       </View>
 
       <ScrollView style={styles.content}>
-        {Platform.OS === 'android' && (
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t(uiLanguage, 'dataManagement')}</Text>
-            
-            <TouchableOpacity
-              style={[styles.exportButton, { backgroundColor: colors.info + '20' }]}
-              onPress={handleExportProgression}
-            >
-              <Download color={colors.info} size={20} />
-              <Text style={[styles.exportButtonText, { color: colors.info }]}>{t(uiLanguage, 'exportProgression')}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.importButton, { backgroundColor: colors.warning + '20' }]}
-              onPress={handleImportProgression}
-            >
-              <Upload color={colors.warning} size={20} />
-              <Text style={[styles.importButtonText, { color: colors.warning }]}>{t(uiLanguage, 'importProgression')}</Text>
-            </TouchableOpacity>
-            
-            <Text style={[styles.accountInfo, { color: colors.textSecondary }]}>{t(uiLanguage, 'exportImportInfo')}</Text>
-          </View>
-        )}
-
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>{t(uiLanguage, 'learningMode')}</Text>
           
@@ -347,7 +323,9 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t(uiLanguage, 'theme')}</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            <Palette color={colors.primary} size={20} /> {t(uiLanguage, 'appearanceSettings')}
+          </Text>
           
           <TouchableOpacity
             style={[styles.option, { backgroundColor: colors.cardBackground }]}
@@ -370,144 +348,7 @@ export default function SettingsScreen() {
             </View>
             {theme === 'dark' && <Check color={colors.primary} size={24} />}
           </TouchableOpacity>
-        </View>
 
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t(uiLanguage, 'dyslexiaMode')}</Text>
-          
-          <View style={[styles.option, { backgroundColor: colors.cardBackground }]}>
-            <View style={styles.themeOption}>
-              <Brain color={colors.primary} size={20} />
-              <Text style={[styles.optionText, { color: colors.text }]}>{t(uiLanguage, 'enableDyslexiaMode')}</Text>
-            </View>
-            <Switch
-              value={dyslexiaSettings.enabled}
-              onValueChange={(value) => setDyslexiaSettings({ enabled: value })}
-              trackColor={{ false: colors.border, true: colors.primary + '80' }}
-              thumbColor={dyslexiaSettings.enabled ? colors.primary : colors.textTertiary}
-            />
-          </View>
-
-          <View style={[styles.sliderContainer, { backgroundColor: colors.cardBackground }]}>
-            <Text style={[styles.sliderLabel, { color: colors.text }]}>
-              {t(uiLanguage, 'fontSize')}: {dyslexiaSettings.fontSize}px
-            </Text>
-            <Slider
-              style={styles.slider}
-              minimumValue={14}
-              maximumValue={28}
-              step={1}
-              value={dyslexiaSettings.fontSize}
-              onValueChange={(value: number) => setDyslexiaSettings({ fontSize: value })}
-              minimumTrackTintColor={colors.primary}
-              maximumTrackTintColor={colors.border}
-              thumbTintColor={colors.primary}
-            />
-          </View>
-
-          <View style={[styles.sliderContainer, { backgroundColor: colors.cardBackground }]}>
-            <Text style={[styles.sliderLabel, { color: colors.text }]}>
-              {t(uiLanguage, 'lineSpacing')}: {dyslexiaSettings.lineHeight}px
-            </Text>
-            <Slider
-              style={styles.slider}
-              minimumValue={20}
-              maximumValue={48}
-              step={2}
-              value={dyslexiaSettings.lineHeight}
-              onValueChange={(value: number) => setDyslexiaSettings({ lineHeight: value })}
-              minimumTrackTintColor={colors.primary}
-              maximumTrackTintColor={colors.border}
-              thumbTintColor={colors.primary}
-            />
-          </View>
-
-          <View style={[styles.sliderContainer, { backgroundColor: colors.cardBackground }]}>
-            <Text style={[styles.sliderLabel, { color: colors.text }]}>
-              {t(uiLanguage, 'wordSpacing')}: {dyslexiaSettings.wordSpacing}px
-            </Text>
-            <Slider
-              style={styles.slider}
-              minimumValue={0}
-              maximumValue={10}
-              step={1}
-              value={dyslexiaSettings.wordSpacing}
-              onValueChange={(value: number) => setDyslexiaSettings({ wordSpacing: value })}
-              minimumTrackTintColor={colors.primary}
-              maximumTrackTintColor={colors.border}
-              thumbTintColor={colors.primary}
-            />
-          </View>
-
-          <View style={[styles.sliderContainer, { backgroundColor: colors.cardBackground }]}>
-            <Text style={[styles.sliderLabel, { color: colors.text }]}>
-              {t(uiLanguage, 'validationTolerance')}: {Math.round(dyslexiaSettings.validationTolerance * 100)}%
-            </Text>
-            <Slider
-              style={styles.slider}
-              minimumValue={0.5}
-              maximumValue={1}
-              step={0.05}
-              value={dyslexiaSettings.validationTolerance}
-              onValueChange={(value: number) => setDyslexiaSettings({ validationTolerance: value })}
-              minimumTrackTintColor={colors.primary}
-              maximumTrackTintColor={colors.border}
-              thumbTintColor={colors.primary}
-            />
-          </View>
-
-          <Text style={[styles.dyslexiaInfo, { color: colors.textSecondary }]}>
-            {t(uiLanguage, 'dyslexiaInfo')}
-          </Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t(uiLanguage, 'lineByLineLearning')}</Text>
-          
-          <View style={[styles.option, { backgroundColor: colors.cardBackground }]}>
-            <View style={styles.themeOption}>
-              <Text style={[styles.optionText, { color: colors.text }]}>{t(uiLanguage, 'enableLineByLine')}</Text>
-            </View>
-            <Switch
-              value={lineByLineSettings.enabled}
-              onValueChange={(value) => setLineByLineSettings({ enabled: value })}
-              trackColor={{ false: colors.border, true: colors.primary + '80' }}
-              thumbColor={lineByLineSettings.enabled ? colors.primary : colors.textTertiary}
-            />
-          </View>
-
-          {lineByLineSettings.enabled && (
-            <View style={[styles.sliderContainer, { backgroundColor: colors.cardBackground }]}>
-              <Text style={[styles.sliderLabel, { color: colors.text }]}>
-                {t(uiLanguage, 'wordsPerLineTitle')}: {lineByLineSettings.wordsPerLine}
-              </Text>
-              <Slider
-                style={styles.slider}
-                minimumValue={3}
-                maximumValue={10}
-                step={1}
-                value={lineByLineSettings.wordsPerLine}
-                onValueChange={(value: number) => setLineByLineSettings({ wordsPerLine: value })}
-                minimumTrackTintColor={colors.primary}
-                maximumTrackTintColor={colors.border}
-                thumbTintColor={colors.primary}
-              />
-              <Text style={[styles.sliderDescription, { color: colors.textSecondary }]}>
-                {t(uiLanguage, 'wordsPerLineDesc')}
-              </Text>
-            </View>
-          )}
-
-          <Text style={[styles.dyslexiaInfo, { color: colors.textSecondary }]}>
-            {t(uiLanguage, 'lineByLineInfo')}
-          </Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            <Palette color={colors.primary} size={20} /> {t(uiLanguage, 'appearanceSettings')}
-          </Text>
-          
           <View style={[styles.sliderContainer, { backgroundColor: colors.cardBackground }]}>
             <Text style={[styles.sliderLabel, { color: colors.text }]}>
               {t(uiLanguage, 'textSize')}: {appearanceSettings.fontSize}px
@@ -734,7 +575,7 @@ export default function SettingsScreen() {
               <Slider
                 style={styles.slider}
                 minimumValue={1}
-                maximumValue={50}
+                maximumValue={90}
                 step={1}
                 value={learningSettings.maxHints}
                 onValueChange={(value: number) => setLearningSettings({ maxHints: value })}
@@ -812,6 +653,30 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {Platform.OS === 'android' && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t(uiLanguage, 'dataManagement')}</Text>
+            
+            <TouchableOpacity
+              style={[styles.exportButton, { backgroundColor: colors.info + '20' }]}
+              onPress={handleExportProgression}
+            >
+              <Download color={colors.info} size={20} />
+              <Text style={[styles.exportButtonText, { color: colors.info }]}>{t(uiLanguage, 'exportProgression')}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.importButton, { backgroundColor: colors.warning + '20' }]}
+              onPress={handleImportProgression}
+            >
+              <Upload color={colors.warning} size={20} />
+              <Text style={[styles.importButtonText, { color: colors.warning }]}>{t(uiLanguage, 'importProgression')}</Text>
+            </TouchableOpacity>
+            
+            <Text style={[styles.accountInfo, { color: colors.textSecondary }]}>{t(uiLanguage, 'exportImportInfo')}</Text>
+          </View>
+        )}
+
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>{t(uiLanguage, 'support')}</Text>
           
@@ -886,7 +751,7 @@ export default function SettingsScreen() {
             
             <View style={styles.modalBody}>
               <Text style={[styles.aboutLabel, { color: colors.textSecondary }]}>{t(uiLanguage, 'version')}:</Text>
-              <Text style={[styles.aboutValue, { color: colors.text }]}>1.0.0</Text>
+              <Text style={[styles.aboutValue, { color: colors.text }]}>1.0.2</Text>
               
               <Text style={[styles.aboutLabel, { color: colors.textSecondary, marginTop: 24 }]}>{t(uiLanguage, 'credits')}:</Text>
               <View style={styles.creditItem}>
