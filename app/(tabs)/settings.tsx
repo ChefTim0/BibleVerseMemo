@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Linking, Switch, Alert, Platform, Modal, ActivityIndicator, TextInput } from "react-native";
 import Slider from '@react-native-community/slider';
 import { Picker } from '@react-native-picker/picker';
-import { Check, Heart, BookOpen, Sun, Moon, Brain, Download, Upload, RefreshCcw, Palette, Zap, Folder, Info, X, Volume2, Play, User, UserRound, Plus, Link as LinkIcon, FileText } from "lucide-react-native";
+import { Check, Heart, BookOpen, Sun, Moon, Brain, Download, Upload, RefreshCcw, Palette, Zap, Folder, Info, X, Volume2, Play, User, UserRound, Plus, Link as LinkIcon, FileText, Github } from "lucide-react-native";
 import { useApp } from "../../contexts/AppContext";
 import { t } from "../../constants/translations";
 import { getColors } from "../../constants/colors";
@@ -217,6 +217,18 @@ export default function SettingsScreen() {
       }
     } catch (error) {
       console.error('Error opening my projects link:', error);
+    }
+  };
+
+  const handleGithub = async () => {
+    try {
+      const url = 'https://github.com/ChefTim0/BibleVerseMemo';
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      }
+    } catch (error) {
+      console.error('Error opening GitHub link:', error);
     }
   };
 
@@ -926,6 +938,14 @@ export default function SettingsScreen() {
           </Text>
 
           <TouchableOpacity
+            style={styles.githubButton}
+            onPress={handleGithub}
+            activeOpacity={0.7}
+          >
+            <Github color={colors.textTertiary} size={24} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
             style={[styles.resetButton, { backgroundColor: colors.error + '20', borderColor: colors.error }]}
             onPress={handleResetSettings}
             activeOpacity={0.8}
@@ -1499,5 +1519,11 @@ const styles = StyleSheet.create({
   dividerText: {
     fontSize: 14,
     fontWeight: "500" as const,
+  },
+  githubButton: {
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    paddingVertical: 12,
+    marginTop: 16,
   },
 });
