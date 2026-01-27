@@ -73,6 +73,16 @@ interface ParsedBible {
 const bibleCache: Map<Language, ParsedBible> = new Map();
 
 function getStandardBookKey(bookId: string, bookAbbrev: string): string {
+  const normalized = bookId.toLowerCase()
+    .replace(/[àáâãäå]/g, 'a')
+    .replace(/[èéêë]/g, 'e')
+    .replace(/[ìíîï]/g, 'i')
+    .replace(/[òóôõö]/g, 'o')
+    .replace(/[ùúûü]/g, 'u')
+    .replace(/[ç]/g, 'c')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  
   const mappings: Record<string, string> = {
     'gen': 'Gen', 'genese': 'Gen', 'genesis': 'Gen', 'genesi': 'Gen',
     'exod': 'Exod', 'exode': 'Exod', 'exodus': 'Exod', 'esodo': 'Exod',
@@ -96,7 +106,7 @@ function getStandardBookKey(bookId: string, bookAbbrev: string): string {
     'prov': 'Prov', 'proverbes': 'Prov', 'proverbs': 'Prov', 'proverbi': 'Prov',
     'eccl': 'Eccl', 'ecclesiaste': 'Eccl', 'ecclesiastes': 'Eccl',
     'song': 'Song', 'cantique': 'Song', 'cantique-des-cantiques': 'Song', 'cantico': 'Song',
-    'isa': 'Isa', 'esaie': 'Isa', 'isaiah': 'Isa', 'isaia': 'Isa',
+    'isa': 'Isa', 'esaie': 'Isa', 'isaie': 'Isa', 'isaiah': 'Isa', 'isaia': 'Isa',
     'jer': 'Jer', 'jeremie': 'Jer', 'jeremiah': 'Jer', 'geremia': 'Jer',
     'lam': 'Lam', 'lamentations': 'Lam', 'lamentazioni': 'Lam',
     'ezek': 'Ezek', 'ezechiel': 'Ezek', 'ezekiel': 'Ezek', 'ezechiele': 'Ezek',
@@ -142,7 +152,6 @@ function getStandardBookKey(bookId: string, bookAbbrev: string): string {
     'rev': 'Rev', 'apocalypse': 'Rev', 'revelation': 'Rev', 'apocalisse': 'Rev',
   };
   
-  const normalized = bookId.toLowerCase().replace(/[^a-z0-9]/g, '-');
   return mappings[normalized] || bookAbbrev;
 }
 
