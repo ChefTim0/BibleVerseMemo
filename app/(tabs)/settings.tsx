@@ -103,7 +103,7 @@ export default function SettingsScreen() {
 
   const handleBooksSource = async () => {
     try {
-      const url = 'https://timprojects.online/sources';
+      const url = 'https://timprojects.online/bible-verse-memo/sources';
       const canOpen = await Linking.canOpenURL(url);
       if (canOpen) {
         await Linking.openURL(url);
@@ -115,7 +115,7 @@ export default function SettingsScreen() {
 
   const handleOpenFAQ = async () => {
     try {
-      const url = 'https://timprojects.online/FAQ#Version';
+      const url = 'https://timprojects.online/bible-verse-memo/FAQ#Version';
       const canOpen = await Linking.canOpenURL(url);
       if (canOpen) {
         await Linking.openURL(url);
@@ -197,7 +197,7 @@ export default function SettingsScreen() {
 
   const handleDonate = async () => {
     try {
-      const url = 'https://timprojects.online/donate';
+      const url = 'https://timprojects.online/bible-verse-memo/donate';
       const canOpen = await Linking.canOpenURL(url);
       if (canOpen) {
         await Linking.openURL(url);
