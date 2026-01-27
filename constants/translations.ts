@@ -149,6 +149,11 @@ export const translations: Record<Language, Record<string, string>> = {
     allBooks: 'All',
     maxMasteryLevel: 'Maximum Mastery Level',
     maxMasteryLevelDesc: 'Number of successful attempts required to fully master a verse',
+    readingSettings: 'Reading Settings',
+    validationSettings: 'Validation Settings',
+    allowLetterInversion: 'Allow Letter Inversion',
+    ignorePunctuation: 'Ignore Punctuation',
+    ttsVoiceInfo: 'System voices available on your device are used. If no voices are displayed, please install "Speech Recognition & Synthesis" from Google.',
   },
   fr: {
     books: 'Livres',
@@ -298,6 +303,11 @@ export const translations: Record<Language, Record<string, string>> = {
     allBooks: 'Tous',
     maxMasteryLevel: 'Niveau de maîtrise maximum',
     maxMasteryLevelDesc: 'Nombre de réussites requises pour maîtriser complètement un verset',
+    readingSettings: 'Paramètres de lecture',
+    validationSettings: 'Paramètres de validation',
+    allowLetterInversion: 'Tolérer l\'inversion des lettres',
+    ignorePunctuation: 'Ignorer la ponctuation',
+    ttsVoiceInfo: 'Les voix système disponibles sur votre appareil sont utilisées. Si aucune voix ne s\'affiche, veuillez installer « Speech Recognition & Synthesis » de Google.',
   },
   'fr-fob': {
     books: 'Livres',

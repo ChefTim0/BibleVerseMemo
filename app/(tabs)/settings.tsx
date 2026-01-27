@@ -660,7 +660,7 @@ export default function SettingsScreen() {
           )}
 
           <Text style={[styles.dyslexiaInfo, { color: colors.textSecondary }]}>
-            Les voix système disponibles sur votre appareil sont utilisées. Si aucune voix ne s'affiche, veuillez installer « Speech Recognition & Synthesis » de Google.
+            {t(uiLanguage, 'ttsVoiceInfo')}
           </Text>
         </View>
 
