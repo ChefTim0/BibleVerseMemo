@@ -1,5 +1,6 @@
 import type { Verse, Language } from '../types/database';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { bookNames as canonicalBookNames } from '../constants/translations';
 
 const CUSTOM_VERSION_KEY = '@custom_version';
 
@@ -70,6 +71,85 @@ interface ParsedBible {
 }
 
 const bibleCache: Map<Language, ParsedBible> = new Map();
+
+function getStandardBookKey(bookId: string, bookAbbrev: string): string {
+  const mappings: Record<string, string> = {
+    'gen': 'Gen', 'genese': 'Gen', 'genesis': 'Gen', 'genesi': 'Gen',
+    'exod': 'Exod', 'exode': 'Exod', 'exodus': 'Exod', 'esodo': 'Exod',
+    'lev': 'Lev', 'levitique': 'Lev', 'leviticus': 'Lev', 'levitico': 'Lev',
+    'num': 'Num', 'nombres': 'Num', 'numbers': 'Num', 'numeri': 'Num',
+    'deut': 'Deut', 'deuteronome': 'Deut', 'deuteronomy': 'Deut', 'deuteronomio': 'Deut',
+    'josh': 'Josh', 'josue': 'Josh', 'joshua': 'Josh', 'giosue': 'Josh',
+    'judg': 'Judg', 'juges': 'Judg', 'judges': 'Judg', 'giudici': 'Judg',
+    'ruth': 'Ruth', 'rut': 'Ruth',
+    '1-sam': '1Sam', '1sam': '1Sam', '1-samuel': '1Sam', '1samuel': '1Sam', '1-samuele': '1Sam',
+    '2-sam': '2Sam', '2sam': '2Sam', '2-samuel': '2Sam', '2samuel': '2Sam', '2-samuele': '2Sam',
+    '1-kgs': '1Kgs', '1kgs': '1Kgs', '1-rois': '1Kgs', '1rois': '1Kgs', '1-re': '1Kgs', '1re': '1Kgs',
+    '2-kgs': '2Kgs', '2kgs': '2Kgs', '2-rois': '2Kgs', '2rois': '2Kgs', '2-re': '2Kgs', '2re': '2Kgs',
+    '1-chr': '1Chr', '1chr': '1Chr', '1-chroniques': '1Chr', '1chroniques': '1Chr', '1-cronache': '1Chr',
+    '2-chr': '2Chr', '2chr': '2Chr', '2-chroniques': '2Chr', '2chroniques': '2Chr', '2-cronache': '2Chr',
+    'ezra': 'Ezra', 'esdras': 'Ezra',
+    'neh': 'Neh', 'nehemie': 'Neh', 'nehemiah': 'Neh', 'neemia': 'Neh',
+    'esth': 'Esth', 'esther': 'Esth', 'ester': 'Esth',
+    'job': 'Job', 'giobbe': 'Job',
+    'ps': 'Ps', 'psaumes': 'Ps', 'psalms': 'Ps', 'salmi': 'Ps',
+    'prov': 'Prov', 'proverbes': 'Prov', 'proverbs': 'Prov', 'proverbi': 'Prov',
+    'eccl': 'Eccl', 'ecclesiaste': 'Eccl', 'ecclesiastes': 'Eccl',
+    'song': 'Song', 'cantique': 'Song', 'cantique-des-cantiques': 'Song', 'cantico': 'Song',
+    'isa': 'Isa', 'esaie': 'Isa', 'isaiah': 'Isa', 'isaia': 'Isa',
+    'jer': 'Jer', 'jeremie': 'Jer', 'jeremiah': 'Jer', 'geremia': 'Jer',
+    'lam': 'Lam', 'lamentations': 'Lam', 'lamentazioni': 'Lam',
+    'ezek': 'Ezek', 'ezechiel': 'Ezek', 'ezekiel': 'Ezek', 'ezechiele': 'Ezek',
+    'dan': 'Dan', 'daniel': 'Dan', 'daniele': 'Dan',
+    'hos': 'Hos', 'osee': 'Hos', 'hosea': 'Hos', 'osea': 'Hos',
+    'joel': 'Joel', 'gioele': 'Joel',
+    'amos': 'Amos',
+    'obad': 'Obad', 'abdias': 'Obad', 'obadiah': 'Obad', 'abdia': 'Obad',
+    'jonah': 'Jonah', 'jonas': 'Jonah', 'giona': 'Jonah',
+    'mic': 'Mic', 'michee': 'Mic', 'micah': 'Mic', 'michea': 'Mic',
+    'nah': 'Nah', 'nahum': 'Nah', 'naum': 'Nah',
+    'hab': 'Hab', 'habacuc': 'Hab', 'habakkuk': 'Hab', 'abacuc': 'Hab',
+    'zeph': 'Zeph', 'sophonie': 'Zeph', 'zephaniah': 'Zeph', 'sofonia': 'Zeph',
+    'hag': 'Hag', 'aggee': 'Hag', 'haggai': 'Hag', 'aggeo': 'Hag',
+    'zech': 'Zech', 'zacharie': 'Zech', 'zechariah': 'Zech', 'zaccaria': 'Zech',
+    'mal': 'Mal', 'malachie': 'Mal', 'malachi': 'Mal', 'malachia': 'Mal',
+    'matt': 'Matt', 'matthieu': 'Matt', 'matthew': 'Matt', 'matteo': 'Matt',
+    'mark': 'Mark', 'marc': 'Mark', 'marco': 'Mark',
+    'luke': 'Luke', 'luc': 'Luke', 'luca': 'Luke',
+    'john': 'John', 'jean': 'John', 'giovanni': 'John',
+    'acts': 'Acts', 'actes': 'Acts', 'actes-des-apotres': 'Acts', 'atti': 'Acts',
+    'rom': 'Rom', 'romains': 'Rom', 'romans': 'Rom', 'romani': 'Rom',
+    '1-cor': '1Cor', '1cor': '1Cor', '1-corinthiens': '1Cor', '1corinthiens': '1Cor', '1-corinzi': '1Cor',
+    '2-cor': '2Cor', '2cor': '2Cor', '2-corinthiens': '2Cor', '2corinthiens': '2Cor', '2-corinzi': '2Cor',
+    'gal': 'Gal', 'galates': 'Gal', 'galatians': 'Gal', 'galati': 'Gal',
+    'eph': 'Eph', 'ephesiens': 'Eph', 'ephesians': 'Eph', 'efesini': 'Eph',
+    'phil': 'Phil', 'philippiens': 'Phil', 'philippians': 'Phil', 'filippesi': 'Phil',
+    'col': 'Col', 'colossiens': 'Col', 'colossians': 'Col', 'colossesi': 'Col',
+    '1-thess': '1Thess', '1thess': '1Thess', '1-thessaloniciens': '1Thess', '1thessaloniciens': '1Thess',
+    '2-thess': '2Thess', '2thess': '2Thess', '2-thessaloniciens': '2Thess', '2thessaloniciens': '2Thess',
+    '1-tim': '1Tim', '1tim': '1Tim', '1-timothee': '1Tim', '1timothee': '1Tim', '1-timoteo': '1Tim',
+    '2-tim': '2Tim', '2tim': '2Tim', '2-timothee': '2Tim', '2timothee': '2Tim', '2-timoteo': '2Tim',
+    'titus': 'Titus', 'tite': 'Titus', 'tito': 'Titus',
+    'phlm': 'Phlm', 'philemon': 'Phlm', 'filemone': 'Phlm',
+    'heb': 'Heb', 'hebreux': 'Heb', 'hebrews': 'Heb', 'ebrei': 'Heb',
+    'jas': 'Jas', 'jacques': 'Jas', 'james': 'Jas', 'giacomo': 'Jas',
+    '1-pet': '1Pet', '1pet': '1Pet', '1-pierre': '1Pet', '1pierre': '1Pet', '1-pietro': '1Pet',
+    '2-pet': '2Pet', '2pet': '2Pet', '2-pierre': '2Pet', '2pierre': '2Pet', '2-pietro': '2Pet',
+    '1-john': '1John', '1john': '1John', '1-jean': '1John', '1jean': '1John', '1-giovanni': '1John',
+    '2-john': '2John', '2john': '2John', '2-jean': '2John', '2jean': '2John', '2-giovanni': '2John',
+    '3-john': '3John', '3john': '3John', '3-jean': '3John', '3jean': '3John', '3-giovanni': '3John',
+    'jude': 'Jude', 'giuda': 'Jude',
+    'rev': 'Rev', 'apocalypse': 'Rev', 'revelation': 'Rev', 'apocalisse': 'Rev',
+  };
+  
+  const normalized = bookId.toLowerCase().replace(/[^a-z0-9]/g, '-');
+  return mappings[normalized] || bookAbbrev;
+}
+
+function getCanonicalBookName(standardKey: string): string | null {
+  const frenchBooks = canonicalBookNames['fr'];
+  return frenchBooks?.[standardKey] || null;
+}
 
 async function parseBibleFile(lang: Language): Promise<ParsedBible> {
   if (bibleCache.has(lang)) {
@@ -205,12 +285,10 @@ async function parseBibleFile(lang: Language): Promise<ParsedBible> {
           }
           currentBook = bookId;
           
-          if (chapter === 1 && verseNum === 1 && lastNonVerseLine) {
-            bookNames.set(bookId, lastNonVerseLine);
-            console.log(`[Database] Found book: ${bookId} -> "${lastNonVerseLine}"`);
-          } else {
-            bookNames.set(bookId, bookAbbrev);
-          }
+          const standardKey = getStandardBookKey(bookId, bookAbbrev);
+          const canonicalName = getCanonicalBookName(standardKey);
+          bookNames.set(bookId, canonicalName || bookAbbrev);
+          console.log(`[Database] Found book: ${bookId} -> "${canonicalName || bookAbbrev}"`);
           
           maxChapter = 0;
         }
