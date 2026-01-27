@@ -462,6 +462,7 @@ const styles = StyleSheet.create({
   bookName: {
     fontSize: 18,
     fontWeight: "600" as const,
+    flexWrap: "wrap" as const,
   },
   modalOverlay: {
     flex: 1,
