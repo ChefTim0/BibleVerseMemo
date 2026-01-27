@@ -54,18 +54,10 @@ async function parseBibleFile(lang: Language): Promise<ParsedBible> {
     }
     
     console.log(`[Database] Downloading ${lang}.txt from GitHub...`);
-    let response = await fetch(url);
-    
+    const response = await fetch(url);
     if (!response.ok) {
-      console.warn(`[Database] GitHub source failed (${response.status}), trying fallback...`);
-      const fallbackUrl = `https://timprojects.online/books/${lang}.txt`;
-      console.log(`[Database] Downloading ${lang}.txt from fallback...`);
-      response = await fetch(fallbackUrl);
-      
-      if (!response.ok) {
-        console.error(`[Database] Failed to fetch ${lang}.txt from both sources:`, response.status, response.statusText);
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      console.error(`[Database] Failed to fetch ${lang}.txt:`, response.status, response.statusText);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     
     const text = await response.text();
