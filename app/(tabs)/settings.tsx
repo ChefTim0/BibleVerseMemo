@@ -16,6 +16,7 @@ import { getVoicesForLanguage, getLanguageCode, speak, stop } from "../../utils/
 const LANGUAGES: { code: Language; name: string; flag: string }[] = [
   { code: 'LSG', name: 'Français - Louis Segond 1910', flag: '🇫🇷' },
   { code: 'FOB', name: 'Français (FOB) - La Sainte Bible', flag: '🇫🇷' },
+  { code: 'darby', name: 'Français - Darby', flag: '🇫🇷' },
   { code: 'KJV', name: 'English - King James Version', flag: '🇬🇧' },
   { code: 'ITADIO', name: 'Italiano - Giovanni Diodati Bibbia 1649', flag: '🇮🇹' },
   { code: 'CEI', name: 'Italiano - Conferenza Episcopale Italiana', flag: '🇮🇹' },
@@ -60,7 +61,7 @@ export default function SettingsScreen() {
   };
 
   const testVoice = async (voiceIdentifier: string | undefined) => {
-    const testText = language.startsWith('fr') || language === 'LSG' || language === 'FOB'
+    const testText = language.startsWith('fr') || language === 'LSG' || language === 'FOB' || language === 'darby'
       ? 'Ceci est un test de la voix sélectionnée.'
       : language === 'KJV'
       ? 'This is a test of the selected voice.'

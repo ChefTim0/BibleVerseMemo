@@ -43,6 +43,7 @@ function getUILanguage(bibleVersion: Language): string {
   const mapping: Record<string, string> = {
     'LSG': 'fr',
     'FOB': 'fr',
+    'darby': 'fr',
     'KJV': 'en',
     'ITADIO': 'it',
     'CEI': 'it',
