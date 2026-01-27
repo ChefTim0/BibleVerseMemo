@@ -72,7 +72,7 @@ interface ParsedBible {
 
 const bibleCache: Map<Language, ParsedBible> = new Map();
 
-function getStandardBookKey(bookId: string, bookAbbrev: string): string {
+function getStandardBookKey(bookId: string): string {
   const normalized = bookId.toLowerCase()
     .replace(/[àáâãäå]/g, 'a')
     .replace(/[èéêë]/g, 'e')
@@ -80,6 +80,7 @@ function getStandardBookKey(bookId: string, bookAbbrev: string): string {
     .replace(/[òóôõö]/g, 'o')
     .replace(/[ùúûü]/g, 'u')
     .replace(/[ç]/g, 'c')
+    .replace(/[ñ]/g, 'n')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
   
@@ -152,7 +153,7 @@ function getStandardBookKey(bookId: string, bookAbbrev: string): string {
     'rev': 'Rev', 'apocalypse': 'Rev', 'revelation': 'Rev', 'apocalisse': 'Rev',
   };
   
-  return mappings[normalized] || bookAbbrev;
+  return mappings[normalized] || 'unknown';
 }
 
 function getCanonicalBookName(standardKey: string, version: Language): string | null {
@@ -248,7 +249,7 @@ async function parseBibleFile(lang: Language): Promise<ParsedBible> {
     const bookNames: Map<string, string> = new Map();
     let matchedLines = 0;
     let skippedLines = 0;
-    let lastNonVerseLine = '';
+    
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
@@ -310,31 +311,34 @@ async function parseBibleFile(lang: Language): Promise<ParsedBible> {
           .replace(/[^a-z0-9]+/g, '-')
           .replace(/^-+|-+$/g, '');
         
-        if (bookId !== currentBook) {
+        const standardKey = getStandardBookKey(bookId);
+        
+        if (standardKey !== currentBook) {
           if (currentBook) {
             bookChapters.set(currentBook, maxChapter);
           }
-          currentBook = bookId;
+          currentBook = standardKey;
           
-          const standardKey = getStandardBookKey(bookId, bookAbbrev);
           const canonicalName = getCanonicalBookName(standardKey, lang);
-          bookNames.set(bookId, canonicalName || bookAbbrev);
-          console.log(`[Database] Found book: ${bookId} -> "${canonicalName || bookAbbrev}" (version: ${lang})`);
+          bookNames.set(standardKey, canonicalName || bookAbbrev);
+          console.log(`[Database] Found book: ${bookId} -> standardKey: ${standardKey} -> "${canonicalName || bookAbbrev}" (version: ${lang})`);
           
           maxChapter = 0;
         }
+        
+        const standardKey2 = getStandardBookKey(bookId);
         
         if (chapter > maxChapter) {
           maxChapter = chapter;
         }
         
-        const cacheKey = `${bookId}-${chapter}`;
+        const cacheKey = `${standardKey2}-${chapter}`;
         if (!verses.has(cacheKey)) {
           verses.set(cacheKey, []);
         }
         
         verses.get(cacheKey)!.push({
-          book: bookId,
+          book: standardKey2,
           chapter,
           verse: verseNum,
           text: verseText,
@@ -344,7 +348,7 @@ async function parseBibleFile(lang: Language): Promise<ParsedBible> {
         if (skippedLines <= 10) {
           console.log(`[Database] Line ${i} skipped (no match):`, JSON.stringify(line.substring(0, 150)));
         }
-        lastNonVerseLine = line;
+        
       }
     }
     
