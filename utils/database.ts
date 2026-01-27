@@ -146,9 +146,31 @@ function getStandardBookKey(bookId: string, bookAbbrev: string): string {
   return mappings[normalized] || bookAbbrev;
 }
 
-function getCanonicalBookName(standardKey: string): string | null {
-  const frenchBooks = canonicalBookNames['fr'];
-  return frenchBooks?.[standardKey] || null;
+function getCanonicalBookName(standardKey: string, version: Language): string | null {
+  let languageKey: string;
+  
+  if (version === 'darby' || version === 'DarbyR' || version === 'LSG' || version === 'FOB') {
+    languageKey = 'fr';
+  } else if (version === 'KJV') {
+    languageKey = 'en';
+  } else if (version === 'ITADIO' || version === 'CEI') {
+    languageKey = 'it';
+  } else if (version === 'RVA' || version === 'spavbl') {
+    languageKey = 'es';
+  } else if (version === 'ELB71' || version === 'ELB' || version === 'LUTH1545' || version === 'deu1912' || version === 'deutkw') {
+    languageKey = 'de';
+  } else if (version === 'VULGATE') {
+    languageKey = 'la';
+  } else if (version === 'TR1894' || version === 'TR1550' || version === 'WHNU' || version === 'grm') {
+    languageKey = 'el';
+  } else if (version === 'WLC' || version === 'heb') {
+    languageKey = 'he';
+  } else {
+    languageKey = 'fr';
+  }
+  
+  const books = canonicalBookNames[languageKey as keyof typeof canonicalBookNames];
+  return books?.[standardKey] || null;
 }
 
 async function parseBibleFile(lang: Language): Promise<ParsedBible> {
@@ -286,9 +308,9 @@ async function parseBibleFile(lang: Language): Promise<ParsedBible> {
           currentBook = bookId;
           
           const standardKey = getStandardBookKey(bookId, bookAbbrev);
-          const canonicalName = getCanonicalBookName(standardKey);
+          const canonicalName = getCanonicalBookName(standardKey, lang);
           bookNames.set(bookId, canonicalName || bookAbbrev);
-          console.log(`[Database] Found book: ${bookId} -> "${canonicalName || bookAbbrev}"`);
+          console.log(`[Database] Found book: ${bookId} -> "${canonicalName || bookAbbrev}" (version: ${lang})`);
           
           maxChapter = 0;
         }
