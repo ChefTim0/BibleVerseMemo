@@ -2971,6 +2971,7 @@ function getLanguageFromBibleVersion(version: string): string {
   const versionToLanguage: Record<string, string> = {
     'LSG': 'fr',
     'FOB': 'fr',
+    'darby': 'fr',
     'KJV': 'en',
     'en-asv': 'en',
     'ITADIO': 'it',
