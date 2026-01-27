@@ -1,7 +1,7 @@
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
-import type { Language, LearningMode, VerseProgress, Theme, DyslexiaSettings, LineByLineSettings, AppearanceSettings, LearningSettings, TTSSettings } from '../types/database';
+import type { Language, LearningMode, VerseProgress, Theme, DyslexiaSettings, ValidationSettings, AppearanceSettings, LearningSettings, TTSSettings } from '../types/database';
 
 interface AppState {
   language: Language;
@@ -10,7 +10,7 @@ interface AppState {
   theme: Theme;
   progress: VerseProgress[];
   dyslexiaSettings: DyslexiaSettings;
-  lineByLineSettings: LineByLineSettings;
+  validationSettings: ValidationSettings;
   appearanceSettings: AppearanceSettings;
   learningSettings: LearningSettings;
   ttsSettings: TTSSettings;
@@ -18,7 +18,7 @@ interface AppState {
   setLearningMode: (mode: LearningMode) => Promise<void>;
   setTheme: (theme: Theme) => Promise<void>;
   setDyslexiaSettings: (settings: Partial<DyslexiaSettings>) => Promise<void>;
-  setLineByLineSettings: (settings: Partial<LineByLineSettings>) => Promise<void>;
+  setValidationSettings: (settings: Partial<ValidationSettings>) => Promise<void>;
   setAppearanceSettings: (settings: Partial<AppearanceSettings>) => Promise<void>;
   setLearningSettings: (settings: Partial<LearningSettings>) => Promise<void>;
   setTTSSettings: (settings: Partial<TTSSettings>) => Promise<void>;
@@ -34,7 +34,7 @@ const LEARNING_MODE_KEY = '@learning_mode';
 const THEME_KEY = '@theme';
 const PROGRESS_KEY = '@verse_progress';
 const DYSLEXIA_KEY = '@dyslexia_settings';
-const LINE_BY_LINE_KEY = '@line_by_line_settings';
+const VALIDATION_KEY = '@validation_settings';
 const APPEARANCE_KEY = '@appearance_settings';
 const LEARNING_SETTINGS_KEY = '@learning_settings';
 const TTS_SETTINGS_KEY = '@tts_settings';
@@ -76,9 +76,10 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
     wordSpacing: 0,
     validationTolerance: 0.8,
   });
-  const [lineByLineSettings, setLineByLineSettingsState] = useState<LineByLineSettings>({
-    enabled: false,
-    wordsPerLine: 5,
+  const [validationSettings, setValidationSettingsState] = useState<ValidationSettings>({
+    toleranceLevel: 0.8,
+    allowLetterInversion: false,
+    ignorePunctuation: false,
   });
   const [appearanceSettings, setAppearanceSettingsState] = useState<AppearanceSettings>({
     fontSize: 16,
@@ -110,13 +111,13 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
 
   const loadSettings = async () => {
     try {
-      const [savedLanguage, savedMode, savedTheme, savedProgress, savedDyslexia, savedLineByLine, savedAppearance, savedLearning, savedTTS] = await Promise.all([
+      const [savedLanguage, savedMode, savedTheme, savedProgress, savedDyslexia, savedValidation, savedAppearance, savedLearning, savedTTS] = await Promise.all([
         AsyncStorage.getItem(LANGUAGE_KEY),
         AsyncStorage.getItem(LEARNING_MODE_KEY),
         AsyncStorage.getItem(THEME_KEY),
         AsyncStorage.getItem(PROGRESS_KEY),
         AsyncStorage.getItem(DYSLEXIA_KEY),
-        AsyncStorage.getItem(LINE_BY_LINE_KEY),
+        AsyncStorage.getItem(VALIDATION_KEY),
         AsyncStorage.getItem(APPEARANCE_KEY),
         AsyncStorage.getItem(LEARNING_SETTINGS_KEY),
         AsyncStorage.getItem(TTS_SETTINGS_KEY),
@@ -127,7 +128,7 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
       if (savedTheme) setThemeState(savedTheme as Theme);
       if (savedProgress) setProgress(JSON.parse(savedProgress));
       if (savedDyslexia) setDyslexiaSettingsState(JSON.parse(savedDyslexia));
-      if (savedLineByLine) setLineByLineSettingsState(JSON.parse(savedLineByLine));
+      if (savedValidation) setValidationSettingsState(JSON.parse(savedValidation));
       if (savedAppearance) setAppearanceSettingsState(JSON.parse(savedAppearance));
       if (savedLearning) setLearningSettingsState(JSON.parse(savedLearning));
       if (savedTTS) setTTSSettingsState(JSON.parse(savedTTS));
@@ -161,10 +162,10 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
     await AsyncStorage.setItem(DYSLEXIA_KEY, JSON.stringify(newSettings));
   };
 
-  const setLineByLineSettings = async (settings: Partial<LineByLineSettings>) => {
-    const newSettings = { ...lineByLineSettings, ...settings };
-    setLineByLineSettingsState(newSettings);
-    await AsyncStorage.setItem(LINE_BY_LINE_KEY, JSON.stringify(newSettings));
+  const setValidationSettings = async (settings: Partial<ValidationSettings>) => {
+    const newSettings = { ...validationSettings, ...settings };
+    setValidationSettingsState(newSettings);
+    await AsyncStorage.setItem(VALIDATION_KEY, JSON.stringify(newSettings));
   };
 
   const setAppearanceSettings = async (settings: Partial<AppearanceSettings>) => {
@@ -248,7 +249,7 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
     theme,
     progress,
     dyslexiaSettings,
-    lineByLineSettings,
+    validationSettings,
     appearanceSettings,
     learningSettings,
     ttsSettings,
@@ -256,7 +257,7 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
     setLearningMode,
     setTheme,
     setDyslexiaSettings,
-    setLineByLineSettings,
+    setValidationSettings,
     setAppearanceSettings,
     setLearningSettings,
     setTTSSettings,

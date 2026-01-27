@@ -1,11 +1,11 @@
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Linking, Switch, Alert, Platform, Modal, ActivityIndicator } from "react-native";
 import Slider from '@react-native-community/slider';
 import { Picker } from '@react-native-picker/picker';
-import { Check, Heart, BookOpen, Sun, Moon, Brain, Download, Upload, RefreshCcw, Palette, Zap, Folder, Info, X, Volume2, Play } from "lucide-react-native";
+import { Check, Heart, BookOpen, Sun, Moon, Brain, Download, Upload, RefreshCcw, Palette, Zap, Folder, Info, X, Volume2, Play, User, UserRound } from "lucide-react-native";
 import { useApp } from "../../contexts/AppContext";
 import { t } from "../../constants/translations";
 import { getColors } from "../../constants/colors";
-import type { LearningMode, Theme, Language, TTSSpeed, TTSVoice } from "../../types/database";
+import type { LearningMode, Theme, Language, TTSSpeed, TTSVoice, ValidationSettings } from "../../types/database";
 import { File, Paths } from 'expo-file-system';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Sharing from 'expo-sharing';
@@ -36,7 +36,7 @@ const LANGUAGES: { code: Language; name: string; flag: string }[] = [
 ];
 
 export default function SettingsScreen() {
-  const { language, uiLanguage, learningMode, theme, dyslexiaSettings, lineByLineSettings, appearanceSettings, learningSettings, ttsSettings, progress, setLanguage, setLearningMode, setTheme, setDyslexiaSettings, setLineByLineSettings, setAppearanceSettings, setLearningSettings, setTTSSettings } = useApp();
+  const { language, uiLanguage, learningMode, theme, dyslexiaSettings, validationSettings, appearanceSettings, learningSettings, ttsSettings, progress, setLanguage, setLearningMode, setTheme, setDyslexiaSettings, setValidationSettings, setAppearanceSettings, setLearningSettings, setTTSSettings } = useApp();
   const colors = getColors(theme);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [availableVoices, setAvailableVoices] = useState<TTSVoice[]>([]);
@@ -199,7 +199,7 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: async () => {
             await setDyslexiaSettings({ enabled: false, fontSize: 18, lineHeight: 32, wordSpacing: 0, validationTolerance: 0.8 });
-            await setLineByLineSettings({ enabled: false, wordsPerLine: 5 });
+            await setValidationSettings({ toleranceLevel: 0.8, allowLetterInversion: false, ignorePunctuation: false });
             await setAppearanceSettings({ fontSize: 16, animationsEnabled: true, showStartupVerse: true });
             await setLearningSettings({ autoAdvance: false, showHints: true, maxHints: 10, autoMarkMemorized: false, autoMarkThreshold: 5, hapticFeedback: true, maxMasteryLevel: 5 });
             await setTTSSettings({ speed: 'normal', voiceIdentifier: undefined });
@@ -373,21 +373,8 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t(uiLanguage, 'dyslexiaMode')}</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t(uiLanguage, 'readingSettings')}</Text>
           
-          <View style={[styles.option, { backgroundColor: colors.cardBackground }]}>
-            <View style={styles.themeOption}>
-              <Brain color={colors.primary} size={20} />
-              <Text style={[styles.optionText, { color: colors.text }]}>{t(uiLanguage, 'enableDyslexiaMode')}</Text>
-            </View>
-            <Switch
-              value={dyslexiaSettings.enabled}
-              onValueChange={(value) => setDyslexiaSettings({ enabled: value })}
-              trackColor={{ false: colors.border, true: colors.primary + '80' }}
-              thumbColor={dyslexiaSettings.enabled ? colors.primary : colors.textTertiary}
-            />
-          </View>
-
           <View style={[styles.sliderContainer, { backgroundColor: colors.cardBackground }]}>
             <Text style={[styles.sliderLabel, { color: colors.text }]}>
               {t(uiLanguage, 'fontSize')}: {dyslexiaSettings.fontSize}px
@@ -438,69 +425,51 @@ export default function SettingsScreen() {
               thumbTintColor={colors.primary}
             />
           </View>
+        </View>
 
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t(uiLanguage, 'validationSettings')}</Text>
+          
           <View style={[styles.sliderContainer, { backgroundColor: colors.cardBackground }]}>
             <Text style={[styles.sliderLabel, { color: colors.text }]}>
-              {t(uiLanguage, 'validationTolerance')}: {Math.round(dyslexiaSettings.validationTolerance * 100)}%
+              {t(uiLanguage, 'validationTolerance')}: {Math.round(validationSettings.toleranceLevel * 100)}%
             </Text>
             <Slider
               style={styles.slider}
               minimumValue={0.5}
               maximumValue={1}
               step={0.05}
-              value={dyslexiaSettings.validationTolerance}
-              onValueChange={(value: number) => setDyslexiaSettings({ validationTolerance: value })}
+              value={validationSettings.toleranceLevel}
+              onValueChange={(value: number) => setValidationSettings({ toleranceLevel: value })}
               minimumTrackTintColor={colors.primary}
               maximumTrackTintColor={colors.border}
               thumbTintColor={colors.primary}
             />
           </View>
 
-          <Text style={[styles.dyslexiaInfo, { color: colors.textSecondary }]}>
-            {t(uiLanguage, 'dyslexiaInfo')}
-          </Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t(uiLanguage, 'lineByLineLearning')}</Text>
-          
           <View style={[styles.option, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.themeOption}>
-              <Text style={[styles.optionText, { color: colors.text }]}>{t(uiLanguage, 'enableLineByLine')}</Text>
+              <Text style={[styles.optionText, { color: colors.text }]}>{t(uiLanguage, 'allowLetterInversion')}</Text>
             </View>
             <Switch
-              value={lineByLineSettings.enabled}
-              onValueChange={(value) => setLineByLineSettings({ enabled: value })}
+              value={validationSettings.allowLetterInversion}
+              onValueChange={(value) => setValidationSettings({ allowLetterInversion: value })}
               trackColor={{ false: colors.border, true: colors.primary + '80' }}
-              thumbColor={lineByLineSettings.enabled ? colors.primary : colors.textTertiary}
+              thumbColor={validationSettings.allowLetterInversion ? colors.primary : colors.textTertiary}
             />
           </View>
 
-          {lineByLineSettings.enabled && (
-            <View style={[styles.sliderContainer, { backgroundColor: colors.cardBackground }]}>
-              <Text style={[styles.sliderLabel, { color: colors.text }]}>
-                {t(uiLanguage, 'wordsPerLineTitle')}: {lineByLineSettings.wordsPerLine}
-              </Text>
-              <Slider
-                style={styles.slider}
-                minimumValue={3}
-                maximumValue={10}
-                step={1}
-                value={lineByLineSettings.wordsPerLine}
-                onValueChange={(value: number) => setLineByLineSettings({ wordsPerLine: value })}
-                minimumTrackTintColor={colors.primary}
-                maximumTrackTintColor={colors.border}
-                thumbTintColor={colors.primary}
-              />
-              <Text style={[styles.sliderDescription, { color: colors.textSecondary }]}>
-                {t(uiLanguage, 'wordsPerLineDesc')}
-              </Text>
+          <View style={[styles.option, { backgroundColor: colors.cardBackground }]}>
+            <View style={styles.themeOption}>
+              <Text style={[styles.optionText, { color: colors.text }]}>{t(uiLanguage, 'ignorePunctuation')}</Text>
             </View>
-          )}
-
-          <Text style={[styles.dyslexiaInfo, { color: colors.textSecondary }]}>
-            {t(uiLanguage, 'lineByLineInfo')}
-          </Text>
+            <Switch
+              value={validationSettings.ignorePunctuation}
+              onValueChange={(value) => setValidationSettings({ ignorePunctuation: value })}
+              trackColor={{ false: colors.border, true: colors.primary + '80' }}
+              thumbColor={validationSettings.ignorePunctuation ? colors.primary : colors.textTertiary}
+            />
+          </View>
         </View>
 
         <View style={styles.section}>
@@ -642,7 +611,7 @@ export default function SettingsScreen() {
               </TouchableOpacity>
 
               {availableVoices.map((voice, index) => {
-                const genderLabel = voice.gender === 'female' ? '♀' : voice.gender === 'male' ? '♂' : '';
+                const GenderIcon = voice.gender === 'female' ? UserRound : voice.gender === 'male' ? User : null;
                 const genderColor = voice.gender === 'female' ? '#EC4899' : voice.gender === 'male' ? '#3B82F6' : colors.textSecondary;
                 return (
                   <TouchableOpacity
@@ -658,15 +627,13 @@ export default function SettingsScreen() {
                   >
                     <View style={styles.voiceInfo}>
                       <View style={styles.voiceNameRow}>
+                        {GenderIcon && <GenderIcon size={16} color={genderColor} />}
                         <Text
                           style={[styles.voiceName, { color: ttsSettings.voiceIdentifier === voice.identifier ? colors.primary : colors.text }]}
                           numberOfLines={1}
                         >
                           {voice.name}
                         </Text>
-                        {genderLabel ? (
-                          <Text style={[styles.voiceGender, { color: genderColor }]}>{genderLabel}</Text>
-                        ) : null}
                       </View>
                       <Text style={[styles.voiceLanguage, { color: colors.textSecondary }]} numberOfLines={1}>
                         {voice.language}
@@ -693,7 +660,7 @@ export default function SettingsScreen() {
           )}
 
           <Text style={[styles.dyslexiaInfo, { color: colors.textSecondary }]}>
-            {t(uiLanguage, 'ttsVoiceInfo')}
+            Les voix système disponibles sur votre appareil sont utilisées. Si aucune voix ne s'affiche, veuillez installer « Speech Recognition & Synthesis » de Google.
           </Text>
         </View>
 
@@ -734,7 +701,7 @@ export default function SettingsScreen() {
               <Slider
                 style={styles.slider}
                 minimumValue={1}
-                maximumValue={50}
+                maximumValue={90}
                 step={1}
                 value={learningSettings.maxHints}
                 onValueChange={(value: number) => setLearningSettings({ maxHints: value })}
@@ -886,7 +853,7 @@ export default function SettingsScreen() {
             
             <View style={styles.modalBody}>
               <Text style={[styles.aboutLabel, { color: colors.textSecondary }]}>{t(uiLanguage, 'version')}:</Text>
-              <Text style={[styles.aboutValue, { color: colors.text }]}>1.0.0</Text>
+              <Text style={[styles.aboutValue, { color: colors.text }]}>1.0.2</Text>
               
               <Text style={[styles.aboutLabel, { color: colors.textSecondary, marginTop: 24 }]}>{t(uiLanguage, 'credits')}:</Text>
               <View style={styles.creditItem}>
@@ -1240,10 +1207,7 @@ const styles = StyleSheet.create({
     alignItems: "center" as const,
     gap: 6,
   },
-  voiceGender: {
-    fontSize: 16,
-    fontWeight: "700" as const,
-  },
+
   voiceLanguage: {
     fontSize: 12,
     marginTop: 2,

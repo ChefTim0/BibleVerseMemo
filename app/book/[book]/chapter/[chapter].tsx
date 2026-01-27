@@ -111,8 +111,8 @@ export default function VersesScreen() {
                     styles.verseText, 
                     { 
                       color: colors.text,
-                      fontSize: dyslexiaSettings.enabled ? dyslexiaSettings.fontSize : 15,
-                      lineHeight: dyslexiaSettings.enabled ? dyslexiaSettings.lineHeight : 22,
+                      fontSize: dyslexiaSettings.fontSize,
+                      lineHeight: dyslexiaSettings.lineHeight,
                     }
                   ]}>
                     {item.book}.{item.chapter}:{item.verse} {item.text}

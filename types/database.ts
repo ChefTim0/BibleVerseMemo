@@ -40,6 +40,12 @@ export interface DyslexiaSettings {
   validationTolerance: number;
 }
 
+export interface ValidationSettings {
+  toleranceLevel: number;
+  allowLetterInversion: boolean;
+  ignorePunctuation: boolean;
+}
+
 export interface LineByLineSettings {
   enabled: boolean;
   wordsPerLine: number;

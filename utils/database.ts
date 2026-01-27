@@ -22,6 +22,28 @@ const BIBLE_URLS: Record<Language, string> = {
   'heb': 'https://raw.githubusercontent.com/ChefTim0/bible4u/refs/heads/main/heb.txt',
 };
 
+const FALLBACK_BIBLE_URLS: Record<Language, string> = {
+  'ITADIO': 'https://timprojects.online/books/ITADIO.txt',
+  'CEI': 'https://timprojects.online/books/CEI.txt',
+  'RVA': 'https://timprojects.online/books/RVA.txt',
+  'spavbl': 'https://timprojects.online/books/spavbl.txt',
+  'ELB71': 'https://timprojects.online/books/ELB71.txt',
+  'ELB': 'https://timprojects.online/books/ELB.txt',
+  'LUTH1545': 'https://timprojects.online/books/LUTH1545.txt',
+  'deu1912': 'https://timprojects.online/books/deu1912.txt',
+  'deutkw': 'https://timprojects.online/books/deutkw.txt',
+  'VULGATE': 'https://timprojects.online/books/VULGATE.txt',
+  'FOB': 'https://timprojects.online/books/FOB.txt',
+  'LSG': 'https://timprojects.online/books/LSG.txt',
+  'KJV': 'https://timprojects.online/books/KJV.txt',
+  'TR1894': 'https://timprojects.online/books/TR1894.txt',
+  'TR1550': 'https://timprojects.online/books/TR1550.txt',
+  'WHNU': 'https://timprojects.online/books/WHNU.txt',
+  'grm': 'https://timprojects.online/books/grm.txt',
+  'WLC': 'https://timprojects.online/books/WLC.txt',
+  'heb': 'https://timprojects.online/books/heb.txt',
+};
+
 interface BookData {
   book: string;
   bookName: string;
@@ -53,14 +75,37 @@ async function parseBibleFile(lang: Language): Promise<ParsedBible> {
       throw new Error(`No URL configured for language: ${lang}`);
     }
     
-    console.log(`[Database] Downloading ${lang}.txt from GitHub...`);
-    const response = await fetch(url);
-    if (!response.ok) {
-      console.error(`[Database] Failed to fetch ${lang}.txt:`, response.status, response.statusText);
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    let text = '';
+    let response: Response | null = null;
     
-    const text = await response.text();
+    try {
+      console.log(`[Database] Downloading ${lang}.txt from GitHub...`);
+      response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      text = await response.text();
+    } catch (primaryError) {
+      console.error(`[Database] Primary source failed:`, primaryError);
+      console.log(`[Database] Trying fallback source...`);
+      
+      const fallbackUrl = FALLBACK_BIBLE_URLS[lang];
+      if (fallbackUrl) {
+        try {
+          response = await fetch(fallbackUrl);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          text = await response.text();
+          console.log(`[Database] Successfully loaded from fallback source`);
+        } catch (fallbackError) {
+          console.error(`[Database] Fallback source also failed:`, fallbackError);
+          throw new Error(`Failed to fetch from both primary and fallback sources`);
+        }
+      } else {
+        throw primaryError;
+      }
+    }
     console.log(`[Database] Downloaded ${text.length} characters`);
     console.log(`[Database] First 500 chars:`, text.substring(0, 500));
     
