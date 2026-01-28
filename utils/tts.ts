@@ -201,6 +201,33 @@ export async function speak(
 
     if (options.voiceIdentifier && Platform.OS !== 'web') {
       speechOptions.voice = options.voiceIdentifier;
+    } else if (Platform.OS !== 'web') {
+      try {
+        // If no voice is specified, try to find a voice that matches the language
+        // This prevents using the system default voice (often English) for other languages
+        const voices = await Speech.getAvailableVoicesAsync();
+        const targetLang = languageCode.toLowerCase().replace('_', '-');
+        const targetPrefix = targetLang.split('-')[0];
+
+        // 1. Try exact match (e.g. fr-FR)
+        let bestVoice = voices.find(v => 
+          v.language.toLowerCase().replace('_', '-') === targetLang
+        );
+
+        // 2. Try prefix match (e.g. fr-CA for fr-FR)
+        if (!bestVoice) {
+          bestVoice = voices.find(v => 
+            v.language.toLowerCase().replace('_', '-').startsWith(targetPrefix)
+          );
+        }
+
+        if (bestVoice) {
+          console.log(`[TTS] Auto-selected voice: ${bestVoice.identifier} (${bestVoice.language}) for ${languageCode}`);
+          speechOptions.voice = bestVoice.identifier;
+        }
+      } catch (e) {
+        console.warn('[TTS] Failed to auto-select voice:', e);
+      }
     }
 
     Speech.speak(text, speechOptions);
