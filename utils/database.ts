@@ -26,6 +26,10 @@ const BIBLE_URLS: Record<Language, string> = {
   'grm': 'https://raw.githubusercontent.com/ChefTim0/bible4u/refs/heads/main/grm.txt',
   'WLC': 'https://raw.githubusercontent.com/ChefTim0/bible4u/refs/heads/main/WLC.txt',
   'heb': 'https://raw.githubusercontent.com/ChefTim0/bible4u/refs/heads/main/heb.txt',
+  'nld': 'https://raw.githubusercontent.com/ChefTim0/bible4u/refs/heads/main/nld.txt',
+  'AA': 'https://raw.githubusercontent.com/ChefTim0/bible4u/refs/heads/main/AA.txt',
+  'PBG': 'https://raw.githubusercontent.com/ChefTim0/bible4u/refs/heads/main/PBG.txt',
+  'RUSV': 'https://raw.githubusercontent.com/ChefTim0/bible4u/refs/heads/main/RUSV.txt',
 };
 
 const FALLBACK_BIBLE_URLS: Record<Language, string> = {
@@ -50,6 +54,10 @@ const FALLBACK_BIBLE_URLS: Record<Language, string> = {
   'grm': 'https://timprojects.online/bible-verse-memo/books/grm.txt',
   'WLC': 'https://timprojects.online/bible-verse-memo/books/WLC.txt',
   'heb': 'https://timprojects.online/bible-verse-memo/books/heb.txt',
+  'nld': 'https://timprojects.online/bible-verse-memo/books/nld.txt',
+  'AA': 'https://timprojects.online/bible-verse-memo/books/AA.txt',
+  'PBG': 'https://timprojects.online/bible-verse-memo/books/PBG.txt',
+  'RUSV': 'https://timprojects.online/bible-verse-memo/books/RUSV.txt',
 };
 
 interface BookData {
@@ -175,6 +183,14 @@ function getCanonicalBookName(standardKey: string, version: Language): string | 
     languageKey = 'el';
   } else if (version === 'WLC' || version === 'heb') {
     languageKey = 'he';
+  } else if (version === 'nld') {
+    languageKey = 'nl';
+  } else if (version === 'AA') {
+    languageKey = 'pt';
+  } else if (version === 'PBG') {
+    languageKey = 'pl';
+  } else if (version === 'RUSV') {
+    languageKey = 'ru';
   } else {
     languageKey = 'fr';
   }

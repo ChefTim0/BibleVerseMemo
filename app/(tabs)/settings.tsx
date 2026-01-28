@@ -22,6 +22,9 @@ const TTS_LANGUAGES: { code: string; name: string; flag: string }[] = [
   { code: 'de-DE', name: 'Deutsch', flag: '🇩🇪' },
   { code: 'it-IT', name: 'Italiano', flag: '🇮🇹' },
   { code: 'pt-BR', name: 'Português', flag: '🇧🇷' },
+  { code: 'nl-NL', name: 'Nederlands', flag: '🇳🇱' },
+  { code: 'pl-PL', name: 'Polski', flag: '🇵🇱' },
+  { code: 'ru-RU', name: 'Русский', flag: '🇷🇺' },
   { code: 'el-GR', name: 'Ελληνικά', flag: '🇬🇷' },
   { code: 'he-IL', name: 'עברית', flag: '🇮🇱' },
   { code: 'la', name: 'Latin', flag: '🇻🇦' },
@@ -49,6 +52,10 @@ const LANGUAGES: { code: Language; name: string; flag: string }[] = [
   { code: 'grm', name: 'Ελληνικά - Ελληνική Βίβλος', flag: '🇬🇷' },
   { code: 'WLC', name: 'עברית - כתבי הקודש', flag: '🇮🇱' },
   { code: 'heb', name: 'עברית - תנ ך עברי מודרני', flag: '🇮🇱' },
+  { code: 'nld', name: 'Nederlands - De Heilige Schrift 1917', flag: '🇳🇱' },
+  { code: 'AA', name: 'Português - Almeida Atualizada', flag: '🇧🇷' },
+  { code: 'PBG', name: 'Polski - Biblia Gdańska', flag: '🇵🇱' },
+  { code: 'RUSV', name: 'Русский - Синодальный перевод', flag: '🇷🇺' },
 ];
 
 export default function SettingsScreen() {

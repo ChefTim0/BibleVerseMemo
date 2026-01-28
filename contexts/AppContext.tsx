@@ -68,6 +68,10 @@ function getUILanguage(bibleVersion: Language): string {
     'grm': 'en',
     'WLC': 'en',
     'heb': 'en',
+    'nld': 'nl',
+    'AA': 'pt',
+    'PBG': 'pl',
+    'RUSV': 'ru',
   };
   return mapping[bibleVersion] || 'en';
 }
