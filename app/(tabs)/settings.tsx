@@ -1168,7 +1168,7 @@ export default function SettingsScreen() {
             
             <View style={styles.modalBody}>
               <Text style={[styles.aboutLabel, { color: colors.textSecondary }]}>{t(uiLanguage, 'version')}:</Text>
-              <Text style={[styles.aboutValue, { color: colors.text }]}>1.0.3</Text>
+              <Text style={[styles.aboutValue, { color: colors.text }]}>1.0.4</Text>
               
               <Text style={[styles.aboutLabel, { color: colors.textSecondary, marginTop: 24 }]}>{t(uiLanguage, 'credits')}:</Text>
               <View style={styles.creditItem}>
