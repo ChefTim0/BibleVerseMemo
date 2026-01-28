@@ -106,6 +106,7 @@ export const [AppProvider, useApp] = createContextHook<AppState>(() => {
   const [ttsSettings, setTTSSettingsState] = useState<TTSSettings>({
     speed: 'normal',
     voiceIdentifier: undefined,
+    voiceLanguage: 'fr-FR',
   });
   const [notificationSettings, setNotificationSettingsState] = useState<NotificationSettings>({
     enabled: false,

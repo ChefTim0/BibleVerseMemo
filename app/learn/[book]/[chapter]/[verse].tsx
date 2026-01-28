@@ -180,8 +180,9 @@ export default function LearnScreen() {
       } else {
         setIsSpeaking(true);
         await speak(verseData.text, {
-          language: language,
+          language: ttsSettings.voiceLanguage || language,
           speed: ttsSettings.speed,
+          voiceIdentifier: ttsSettings.voiceIdentifier,
           onStart: () => {
             console.log('[TTS] Started reading verse');
           },
@@ -199,7 +200,7 @@ export default function LearnScreen() {
       console.error('[TTS] Failed to toggle speech:', error);
       setIsSpeaking(false);
     }
-  }, [verseData, language, ttsSettings.speed, isSpeaking]);
+  }, [verseData, language, ttsSettings.speed, ttsSettings.voiceLanguage, ttsSettings.voiceIdentifier, isSpeaking]);
 
   useEffect(() => {
     return () => {

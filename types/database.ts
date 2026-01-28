@@ -79,6 +79,7 @@ export interface TTSVoice {
 export interface TTSSettings {
   speed: TTSSpeed;
   voiceIdentifier?: string;
+  voiceLanguage?: string;
 }
 
 export interface NotificationTime {

@@ -15,6 +15,18 @@ import { getVoicesForLanguage, getLanguageCode, speak, stop } from "../../utils/
 import { scheduleMultipleReminders, cancelAllNotifications } from "../../utils/notifications";
 import DateTimePicker from '@react-native-community/datetimepicker';
 
+const TTS_LANGUAGES: { code: string; name: string; flag: string }[] = [
+  { code: 'fr-FR', name: 'Français', flag: '🇫🇷' },
+  { code: 'en-US', name: 'English', flag: '🇬🇧' },
+  { code: 'es-ES', name: 'Español', flag: '🇪🇸' },
+  { code: 'de-DE', name: 'Deutsch', flag: '🇩🇪' },
+  { code: 'it-IT', name: 'Italiano', flag: '🇮🇹' },
+  { code: 'pt-BR', name: 'Português', flag: '🇧🇷' },
+  { code: 'el-GR', name: 'Ελληνικά', flag: '🇬🇷' },
+  { code: 'he-IL', name: 'עברית', flag: '🇮🇱' },
+  { code: 'la', name: 'Latin', flag: '🇻🇦' },
+];
+
 const LANGUAGES: { code: Language; name: string; flag: string }[] = [
   { code: 'LSG', name: 'Français - Louis Segond 1910', flag: '🇫🇷' },
   { code: 'FOB', name: 'Français (FOB) - La Sainte Bible', flag: '🇫🇷' },
@@ -54,35 +66,43 @@ export default function SettingsScreen() {
 
   useEffect(() => {
     const loadVoices = async () => {
-      const langCode = getLanguageCode(language);
+      setLoadingVoices(true);
+      const langCode = ttsSettings.voiceLanguage || getLanguageCode(language);
       const voices = await getVoicesForLanguage(langCode);
       setAvailableVoices(voices);
       setLoadingVoices(false);
       console.log('[Settings] Loaded voices for', langCode, ':', voices.length);
     };
     loadVoices();
-  }, [language]);
+  }, [ttsSettings.voiceLanguage, language]);
 
   const handleVoiceChange = async (voiceIdentifier: string | undefined) => {
     await setTTSSettings({ voiceIdentifier });
   };
 
   const testVoice = async (voiceIdentifier: string | undefined) => {
-    const testText = language.startsWith('fr') || language === 'LSG' || language === 'FOB' || language === 'darby' || language === 'DarbyR'
+    const voiceLang = ttsSettings.voiceLanguage || getLanguageCode(language);
+    const testText = voiceLang.startsWith('fr')
       ? 'Ceci est un test de la voix sélectionnée.'
-      : language === 'KJV'
+      : voiceLang.startsWith('en')
       ? 'This is a test of the selected voice.'
-      : language.startsWith('es') || language === 'RVA' || language === 'spavbl'
+      : voiceLang.startsWith('es')
       ? 'Esta es una prueba de la voz seleccionada.'
-      : language.startsWith('de') || language === 'ELB71' || language === 'ELB' || language === 'LUTH1545' || language === 'deu1912' || language === 'deutkw'
+      : voiceLang.startsWith('de')
       ? 'Dies ist ein Test der ausgewählten Stimme.'
-      : language.startsWith('it') || language === 'ITADIO' || language === 'CEI'
+      : voiceLang.startsWith('it')
       ? 'Questo è un test della voce selezionata.'
+      : voiceLang.startsWith('pt')
+      ? 'Este é um teste da voz selecionada.'
+      : voiceLang.startsWith('el')
+      ? 'Αυτή είναι μια δοκιμή της επιλεγμένης φωνής.'
+      : voiceLang.startsWith('he')
+      ? 'זהו מבחן של הקול שנבחר.'
       : 'This is a test of the selected voice.';
 
     setTestingVoice(voiceIdentifier || 'default');
     await speak(testText, {
-      language,
+      language: voiceLang,
       speed: ttsSettings.speed,
       voiceIdentifier,
       onDone: () => setTestingVoice(null),
@@ -304,7 +324,7 @@ export default function SettingsScreen() {
             await setValidationSettings({ toleranceLevel: 0.95, allowLetterInversion: false, ignorePunctuation: true });
             await setAppearanceSettings({ fontSize: 16, animationsEnabled: true, showStartupVerse: true });
             await setLearningSettings({ autoAdvance: false, showHints: true, maxHints: 10, autoMarkMemorized: false, autoMarkThreshold: 5, hapticFeedback: true, maxMasteryLevel: 20 });
-            await setTTSSettings({ speed: 'normal', voiceIdentifier: undefined });
+            await setTTSSettings({ speed: 'normal', voiceIdentifier: undefined, voiceLanguage: 'fr-FR' });
             Alert.alert(t(uiLanguage, 'success'), t(uiLanguage, 'settingsReset'));
           },
         },
@@ -319,6 +339,10 @@ export default function SettingsScreen() {
   const handleResetVoice = async () => {
     await stop();
     await setTTSSettings({ voiceIdentifier: undefined });
+  };
+
+  const handleVoiceLanguageChange = async (langCode: string) => {
+    await setTTSSettings({ voiceLanguage: langCode, voiceIdentifier: undefined });
   };
 
   const handleNotificationToggle = async (value: boolean) => {
@@ -744,6 +768,31 @@ export default function SettingsScreen() {
           </View>
 
           <Text style={[styles.sliderLabel, { color: colors.text, marginTop: 16, marginBottom: 8, paddingHorizontal: 4 }]}>
+            {t(uiLanguage, 'ttsVoiceLanguage')}
+          </Text>
+
+          <View style={[styles.pickerContainer, { backgroundColor: colors.cardBackground, borderColor: colors.border, marginBottom: 16 }]}>
+            <Picker
+              selectedValue={ttsSettings.voiceLanguage || getLanguageCode(language)}
+              onValueChange={(itemValue) => handleVoiceLanguageChange(itemValue as string)}
+              style={[styles.picker, { color: colors.text }]}
+              dropdownIconColor={colors.text}
+              mode={Platform.OS === 'android' ? 'dropdown' : 'dialog'}
+              itemStyle={Platform.OS === 'ios' ? { color: colors.text, backgroundColor: colors.cardBackground } : undefined}
+            >
+              {TTS_LANGUAGES.map((lang) => (
+                <Picker.Item
+                  key={lang.code}
+                  label={`${lang.flag} ${lang.name}`}
+                  value={lang.code}
+                  color={colors.text}
+                  style={Platform.OS === 'android' ? { backgroundColor: colors.cardBackground } : undefined}
+                />
+              ))}
+            </Picker>
+          </View>
+
+          <Text style={[styles.sliderLabel, { color: colors.text, marginBottom: 8, paddingHorizontal: 4 }]}>
             {t(uiLanguage, 'ttsVoice')}
           </Text>
 
