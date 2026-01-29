@@ -10,17 +10,53 @@ if (Platform.OS !== 'web') {
     handleNotification: async () => ({
       shouldShowAlert: true,
       shouldPlaySound: true,
-      shouldSetBadge: false,
+      shouldSetBadge: true,
       shouldShowBanner: true,
       shouldShowList: true,
     }),
   });
 }
 
+export async function initNotifications() {
+  if (Platform.OS === 'web') return;
+
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('daily-reminders-v2', {
+      name: 'Daily Reminders',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      bypassDnd: true,
+    });
+  }
+}
+
 export async function requestNotificationPermissions(): Promise<boolean> {
   if (Platform.OS === 'web') {
     return false;
   }
+
+  // Ensure handler is set
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
 
   console.log('[Notifications] Requesting notification permissions...');
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -40,12 +76,14 @@ export async function requestNotificationPermissions(): Promise<boolean> {
   }
 
   if (Platform.OS === 'android') {
-    // Create notification channel for Android
-    await Notifications.setNotificationChannelAsync('daily-reminders', {
+      // Create notification channel for Android
+    await Notifications.setNotificationChannelAsync('daily-reminders-v2', {
       name: 'Daily Reminders',
-      importance: Notifications.AndroidImportance.HIGH,
+      importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: '#FF231F7C',
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      bypassDnd: true,
     });
 
     try {
@@ -96,7 +134,7 @@ export async function scheduleVerseReminderNotification(
         hour,
         minute,
         repeats: true,
-        channelId: 'daily-reminders',
+        channelId: 'daily-reminders-v2',
       },
     });
     console.log('[Notifications] Scheduled notification with ID:', identifier);
@@ -136,7 +174,7 @@ export async function scheduleMultipleReminders(
           hour: time.hour,
           minute: time.minute,
           repeats: true,
-          channelId: 'daily-reminders',
+          channelId: 'daily-reminders-v2',
         },
       });
       identifiers.push(identifier);
