@@ -44,7 +44,17 @@ const LANGUAGE_CODES: Record<string, string> = {
 };
 
 export function getLanguageCode(bibleVersion: string): string {
-  return LANGUAGE_CODES[bibleVersion] || 'en-US';
+  // If it's a known bible version or short code, return the mapped language
+  if (LANGUAGE_CODES[bibleVersion]) {
+    return LANGUAGE_CODES[bibleVersion];
+  }
+  
+  // If it already looks like a language code (e.g. fr-FR, en-US), return it
+  if (/^[a-z]{2}-[A-Z]{2}$/.test(bibleVersion)) {
+    return bibleVersion;
+  }
+
+  return 'en-US';
 }
 
 function detectGender(voiceName: string, identifier: string): 'male' | 'female' | 'unknown' {

@@ -40,6 +40,14 @@ export async function requestNotificationPermissions(): Promise<boolean> {
   }
 
   if (Platform.OS === 'android') {
+    // Create notification channel for Android
+    await Notifications.setNotificationChannelAsync('daily-reminders', {
+      name: 'Daily Reminders',
+      importance: Notifications.AndroidImportance.HIGH,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+    });
+
     try {
       const alarmPermission = await Notifications.getAlarmPermissionsAsync();
       console.log('[Notifications] Alarm permission status:', alarmPermission);
@@ -81,12 +89,14 @@ export async function scheduleVerseReminderNotification(
         title: '📖 Time to practice!',
         body: 'Review your verses to maintain your streak',
         data: { type: 'daily_reminder' },
+        sound: true,
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
         hour,
         minute,
         repeats: true,
+        channelId: 'daily-reminders',
       },
     });
     console.log('[Notifications] Scheduled notification with ID:', identifier);
@@ -119,12 +129,14 @@ export async function scheduleMultipleReminders(
           title: '📖 Temps de s\'exercer !',
           body: 'Révisez vos versets pour progresser',
           data: { type: 'daily_reminder', hour: time.hour, minute: time.minute },
+          sound: true,
         },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
           hour: time.hour,
           minute: time.minute,
           repeats: true,
+          channelId: 'daily-reminders',
         },
       });
       identifiers.push(identifier);
