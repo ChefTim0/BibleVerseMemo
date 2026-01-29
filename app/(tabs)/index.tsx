@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Shuffle, RefreshCw, X, BookOpen } from "lucide-react-native";
 import { useApp } from "../../contexts/AppContext";
+import { AdBanner } from "../../components/AdBanner";
 import { getBooks, getRandomVerse, getRandomNewTestamentVerse, getRandomOldTestamentVerse } from "../../utils/database";
 import { t, getBookName } from "../../constants/translations";
 import { getColors } from "../../constants/colors";
@@ -233,14 +234,20 @@ export default function BooksScreen() {
         data={books}
         keyExtractor={(item) => item}
         contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[styles.bookCard, { backgroundColor: colors.cardBackground }]}
-            onPress={() => handleBookPress(item)}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.bookName, { color: colors.text }]}>{bookNames[item] || item}</Text>
-          </TouchableOpacity>
+        ListHeaderComponent={<AdBanner />}
+        renderItem={({ item, index }) => (
+          <View>
+            <TouchableOpacity
+              style={[styles.bookCard, { backgroundColor: colors.cardBackground }]}
+              onPress={() => handleBookPress(item)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.bookName, { color: colors.text }]}>{bookNames[item] || item}</Text>
+            </TouchableOpacity>
+            {(index + 1) % 11 === 0 && index !== books.length - 1 && (
+              <AdBanner />
+            )}
+          </View>
         )}
       />
 
